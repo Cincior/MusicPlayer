@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/darkBlue"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    tools:context=".view.MainActivity">
 
     <TextView
         android:id="@+id/header"
         style="@style/headerStyle"
-        android:text="@string/headerTitle"/>
+        android:text="@string/headerTitle" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/songList"
+        style="@style/recyclerViewStyle"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 
 </LinearLayout>
