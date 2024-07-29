@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MusicPlayer</string>
+    <string name="headerTitle">K7 Music Player</string>
 </resources>
