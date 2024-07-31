@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="100dp"
     android:background="@color/lightBlueItem"
-    android:layout_marginVertical="5dp">
+    android:layout_marginVertical="8dp"
+    android:layout_marginHorizontal="5dp">
 
     <ImageView
         android:layout_width="80dp"
