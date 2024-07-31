@@ -11,7 +11,7 @@ class SongsFinder()
     fun getSongs(): ArrayList<Song>
     {
         val songList = arrayListOf(
-            Song(1, "test", 2.00, "/storage/emulated/0/Download/SHINY FINALLLLLL WAV.wav")
+            Song(1, "test", 20000, "/storage/emulated/0/Download/SHINY FINALLLLLL WAV.wav")
         )
         return songList
     }
@@ -30,7 +30,7 @@ class SongsFinder()
                 {
                     if (file.isFile && ( file.extension.equals("mp3", ignoreCase = true) || file.extension.equals("wav", ignoreCase = true)))
                     {
-                        songList.add(Song(id, file.name, (getSongDuration("/storage/emulated/0/Download/" + file.name)).toDouble() / 60000, "/storage/emulated/0/Download/" + file.name))
+                        songList.add(Song(id, file.name, (getSongDuration("/storage/emulated/0/Download/" + file.name)), "/storage/emulated/0/Download/" + file.name))
                     }
                     id++
                 }
@@ -60,17 +60,5 @@ class SongsFinder()
             retriever.release()
         }
     }
-//    private fun getDuration(file: File): String {
-//        val mediaMetadataRetriever = MediaMetadataRetriever()
-//        mediaMetadataRetriever.setDataSource(file.absolutePath)
-//        val durationStr =
-//            mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-//        return Utils.formateMilliSeccond(durationStr!!.toLong())
-//    }
-//    fun dur(path: String): Int
-//    {
-//        val mp = MediaPlayer.create(context, Uri.parse(path))
-//        val duration = mp.duration
-//        return duration
-//    }
+
 }
