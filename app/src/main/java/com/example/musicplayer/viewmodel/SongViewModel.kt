@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.SongsFinder
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class SongViewModel : ViewModel() {
 
@@ -13,8 +15,15 @@ class SongViewModel : ViewModel() {
 
     init
     {
+        getSongs()
+    }
+
+    private fun getSongs() = runBlocking {
         val SF = SongsFinder()
-        val songList = SF.getSongsFromDwonload()
-        _items.value = songList
+        var songList: ArrayList<Song>
+        launch {
+            songList = SF.getSongsFromDownload()
+            _items.value = songList
+        }
     }
 }

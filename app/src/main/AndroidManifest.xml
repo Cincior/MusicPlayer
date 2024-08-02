@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/> <!-- PREVIOUS VERSION OF ANDROID -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
 
 
     <application
@@ -17,6 +18,7 @@
         tools:targetApi="31">
         <activity
             android:name=".view.MainActivity"
+            android:theme="@style/Theme.SplashScreen"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

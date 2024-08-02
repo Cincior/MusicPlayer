@@ -2,6 +2,8 @@ package com.example.musicplayer.model
 
 import android.media.MediaMetadataRetriever
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 
@@ -16,11 +18,12 @@ class SongsFinder()
         return songList
     }
 
-    fun getSongsFromDwonload(): ArrayList<Song>
+    suspend fun getSongsFromDownload(): ArrayList<Song> = withContext(Dispatchers.IO)
     {
         var id = 0
         val songList = ArrayList<Song>()
         val getFolder = File("/storage/emulated/0/Download") // THIS PATH CAN CHANGE
+        //val getFolder = File("/sdcard/Download/") // THIS PATH CAN CHANGE
         if (getFolder.exists() && getFolder.isDirectory)
         {
             val files = getFolder.listFiles()
@@ -36,8 +39,7 @@ class SongsFinder()
                 }
             }
         }
-        Log.i("xd", songList.toString())
-        return songList
+        return@withContext songList
     }
 
     private fun getSongDuration(filePath: String): Long // TIME IN MILLISECONDS
