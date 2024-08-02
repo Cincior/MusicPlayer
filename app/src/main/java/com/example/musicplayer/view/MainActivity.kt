@@ -1,30 +1,24 @@
 package com.example.musicplayer.view
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.viewmodel.SongViewModel
-
-import android.Manifest
-import android.content.pm.PackageManager
-import android.util.Log
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
-
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.recyclerview.widget.DefaultItemAnimator
-import com.example.musicplayer.model.SongsFinder
-import java.io.File
-import kotlin.system.exitProcess
 
 
 class MainActivity : AppCompatActivity()
@@ -58,7 +52,7 @@ class MainActivity : AppCompatActivity()
         }
 
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
-        recyclerView.itemAnimator = DefaultItemAnimator()
+        (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         songViewModel.items.observe(this, Observer { items -> recyclerView.adapter = SongAdapter(items, this) })
     }
 

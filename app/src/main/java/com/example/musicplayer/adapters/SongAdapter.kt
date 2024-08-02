@@ -17,10 +17,8 @@ import com.example.musicplayer.model.Song
 import java.util.Locale
 
 class SongAdapter(private val items: List<Song>, private val context: Context) : RecyclerView.Adapter<SongAdapter.ItemViewHolder>() {
-    private lateinit var mediaPlayer: MediaPlayer
+    private var mediaPlayer: MediaPlayer? = null
     private var currentlyPlayingPosition = -1
-    lateinit var currentlyPlayingImage: ImageView
-    lateinit var currentlyPlayingTitle: TextView
 
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val titleTextView: TextView = view.findViewById(R.id.songTitle)
@@ -36,52 +34,49 @@ class SongAdapter(private val items: List<Song>, private val context: Context) :
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val item = items[position]
         holder.titleTextView.text = item.title
-        holder.durationTextView.text = formatMilliseconds(item.duration).toString()
+        holder.durationTextView.text = formatMilliseconds(item.duration)
+
+        if(currentlyPlayingPosition == position)
+        {
+            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
+            holder.playingImage.visibility = View.VISIBLE
+        }
+        else
+        {
+            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.playingImage.visibility = View.INVISIBLE
+        }
+
         holder.itemView.setOnClickListener {
             val animation = AnimationUtils.loadAnimation(context, R.anim.song_clicked_animation)
             holder.itemView.startAnimation(animation)
-            //notifyItemChanged(holder.adapterPosition)
 
 
-            if (currentlyPlayingPosition != -1 && currentlyPlayingPosition != holder.adapterPosition) {
-                mediaPlayer.stop()
-                mediaPlayer.release()
-
-                currentlyPlayingImage.visibility = View.INVISIBLE
-                currentlyPlayingImage = holder.playingImage
-                currentlyPlayingImage.visibility = View.VISIBLE
-
-
-                currentlyPlayingTitle.setTextColor(ContextCompat.getColor(context, R.color.white))
-                currentlyPlayingTitle = holder.titleTextView
-                currentlyPlayingTitle.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
-
-
+            if (currentlyPlayingPosition != -1) {
+                notifyItemChanged(currentlyPlayingPosition)
             }
-
-            if (currentlyPlayingPosition == holder.adapterPosition) {
-                mediaPlayer.stop()
-                mediaPlayer.release()
+            if(currentlyPlayingPosition == holder.adapterPosition)
+            {
+                mediaPlayer?.stop()
+                mediaPlayer?.release()
+                mediaPlayer = null
+                notifyItemChanged(currentlyPlayingPosition)
                 currentlyPlayingPosition = -1
-
-                currentlyPlayingImage.visibility = View.INVISIBLE
-                currentlyPlayingTitle.setTextColor(ContextCompat.getColor(context, R.color.white))
             }
             else
             {
+                mediaPlayer?.stop()
+                mediaPlayer?.release()
                 mediaPlayer = MediaPlayer().apply {
                     setDataSource(item.path)
                     prepare()
                     start()
                 }
                 currentlyPlayingPosition = holder.adapterPosition
+                notifyItemChanged(currentlyPlayingPosition)
 
-                currentlyPlayingImage = holder.playingImage
-                currentlyPlayingImage.visibility = View.VISIBLE
-
-                currentlyPlayingTitle = holder.titleTextView
-                currentlyPlayingTitle.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
             }
+
         }
     }
 
