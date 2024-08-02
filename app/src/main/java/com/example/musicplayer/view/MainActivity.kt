@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
@@ -32,8 +31,9 @@ class MainActivity : AppCompatActivity()
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
+        // Set night mode to change status bar icons color to white
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -43,8 +43,7 @@ class MainActivity : AppCompatActivity()
             insets
         }
 
-
-
+        // MAIN LOGIC
         getPermission()
         if(!permissionGranted)
         {
@@ -56,6 +55,10 @@ class MainActivity : AppCompatActivity()
         songViewModel.items.observe(this, Observer { items -> recyclerView.adapter = SongAdapter(items, this) })
     }
 
+    /**
+     * Asks user for needed permission (to get audio files from memory) in way that depends on currently using system
+     * assign permissionGranted = true if user gave permission
+     */
     private fun getPermission()
     {
         if(getSystemVersion() >= 33)
@@ -107,6 +110,9 @@ class MainActivity : AppCompatActivity()
         }
     }
 
+    /**
+     * @return version of android system
+     */
     private fun getSystemVersion(): Int
     {
         return android.os.Build.VERSION.SDK_INT

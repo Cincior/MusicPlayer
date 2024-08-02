@@ -18,11 +18,14 @@ class SongViewModel : ViewModel() {
         getSongs()
     }
 
+    /**
+     * Method assigns all founded songs to _items
+     */
     private fun getSongs() = runBlocking {
-        val SF = SongsFinder()
+        val sf = SongsFinder()
         var songList: ArrayList<Song>
         launch {
-            songList = SF.getSongsFromDownload()
+            songList = sf.getSongsFromDownload()
             _items.value = songList
         }
     }
