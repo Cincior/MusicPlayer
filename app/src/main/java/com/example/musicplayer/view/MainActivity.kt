@@ -4,14 +4,10 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -26,23 +22,14 @@ class MainActivity : AppCompatActivity()
     {
         var permissionGranted = false
     }
-    private val REQUEST_CODE_READ_EXTERNAL_STORAGE = 0
+    private val requestCodeReadMemory = 0
     private val songViewModel: SongViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
-        // Set night mode to change status bar icons color to white
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         // MAIN LOGIC
         getPermission()
@@ -68,7 +55,7 @@ class MainActivity : AppCompatActivity()
             {
                 ActivityCompat.requestPermissions(this,
                     arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
-                    REQUEST_CODE_READ_EXTERNAL_STORAGE)
+                    requestCodeReadMemory)
             }
             else
             {
@@ -81,7 +68,7 @@ class MainActivity : AppCompatActivity()
             {
                 ActivityCompat.requestPermissions(this,
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    REQUEST_CODE_READ_EXTERNAL_STORAGE)
+                    requestCodeReadMemory)
             }
             else
             {
@@ -97,7 +84,7 @@ class MainActivity : AppCompatActivity()
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_READ_EXTERNAL_STORAGE) {
+        if (requestCode == requestCodeReadMemory) {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED))
             {
                 permissionGranted = true
