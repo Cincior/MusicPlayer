@@ -1,3 +1,5 @@
 package com.example.musicplayer.model
 
-data class Song(val id: Int, val title: String, val duration: Long, val path: String)
+import android.net.Uri
+
+data class Song(val id: Long, val title: String, val duration: String, val uri: Uri)

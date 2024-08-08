@@ -4,16 +4,22 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
+import com.example.musicplayer.model.Song
 import com.example.musicplayer.viewmodel.SongViewModel
+import com.example.musicplayer.viewmodel.SongViewModelFactory
 
 
 class MainActivity : AppCompatActivity()
@@ -23,13 +29,25 @@ class MainActivity : AppCompatActivity()
         var permissionGranted = false
     }
     private val requestCodeReadMemory = 0
-    private val songViewModel: SongViewModel by viewModels()
+    private val songViewModel: SongViewModel by viewModels {
+        SongViewModelFactory(application)
+    }
+    private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(R.layout.activity_main)
+
+        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult())
+        {
+            if (it.resultCode == RESULT_OK) {
+                Toast.makeText(this@MainActivity, "Song deleted successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@MainActivity, "Song couldn't be deleted", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         // MAIN LOGIC
         getPermission()
@@ -40,7 +58,7 @@ class MainActivity : AppCompatActivity()
 
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
-        songViewModel.items.observe(this, Observer { items -> recyclerView.adapter = SongAdapter(items, this) })
+        songViewModel.items.observe(this, Observer { items -> recyclerView.adapter = SongAdapter(items, this, intentSenderLauncher) })
     }
 
     /**

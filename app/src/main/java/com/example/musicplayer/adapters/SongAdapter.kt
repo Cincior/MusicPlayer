@@ -2,6 +2,7 @@ package com.example.musicplayer.adapters
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,17 +17,20 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
+import com.example.musicplayer.media.AudioPlayer
 import com.example.musicplayer.model.Song
 import java.io.File
 import java.util.Locale
 import kotlin.math.ceil
 
-class SongAdapter(private val items: ArrayList<Song>, private val context: Context) : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
+class SongAdapter(
+    private val items: ArrayList<Song>,
+    private val context: Context,
+    private val intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>)
+    : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
 {
-    private var mediaPlayer: MediaPlayer? = null
+    private var audioPlayer: AudioPlayer? = null
     private var currentlyPlayingPosition = -1 // stores position of song that is currently playing
-    private var currentlyMarked = -1
-    private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view)
     {
@@ -45,10 +49,9 @@ class SongAdapter(private val items: ArrayList<Song>, private val context: Conte
     {
         val item = items[position]
         holder.titleTextView.text = item.title
-        holder.durationTextView.text = formatMilliseconds(item.duration)
+        holder.durationTextView.text = item.duration
 
         checkClicedElement(currentlyPlayingPosition, holder, position)
-
 
         holder.itemView.setOnClickListener {
             songClicked(holder, item)
@@ -56,7 +59,6 @@ class SongAdapter(private val items: ArrayList<Song>, private val context: Conte
         holder.itemView.setOnLongClickListener{
             songLongClicked(holder, item)
             Toast.makeText(context, "dont hold me!", Toast.LENGTH_SHORT).show()
-
             true
         }
     }
@@ -65,7 +67,8 @@ class SongAdapter(private val items: ArrayList<Song>, private val context: Conte
         currentlyPlayingPosition: Int,
         holder: ItemViewHolder,
         position: Int
-    ) {
+    )
+    {
         if(currentlyPlayingPosition == position)
         {
             holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
@@ -93,22 +96,17 @@ class SongAdapter(private val items: ArrayList<Song>, private val context: Conte
         if (currentlyPlayingPosition != -1)
         {
             notifyItemChanged(currentlyPlayingPosition)
+            audioPlayer?.stopSong()
         }
         if(currentlyPlayingPosition == holder.adapterPosition)
         {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-            mediaPlayer = null
+            audioPlayer?.stopSong()
             currentlyPlayingPosition = -1
         }
         else
         {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(item.path)
-                prepare()
-                start()
+            audioPlayer = AudioPlayer(context, item.uri).apply {
+                playSong()
             }
             currentlyPlayingPosition = holder.adapterPosition
         }
@@ -124,6 +122,7 @@ class SongAdapter(private val items: ArrayList<Song>, private val context: Conte
                 if(which == 0)
                 {
                     Toast.makeText(context, "NOT IMPLEMENTED YET", Toast.LENGTH_SHORT).show()
+                    deleteSong(item)
                 }
                 else
                 {
@@ -134,21 +133,14 @@ class SongAdapter(private val items: ArrayList<Song>, private val context: Conte
         val dialog: AlertDialog = builder.create()
         dialog.show()
     }
+
+    private fun deleteSong(item: Song)
+    {
+        val deleteRequest = MediaStore.createDeleteRequest(context.contentResolver, listOf(item.uri))
+        intentSenderLauncher.launch(IntentSenderRequest.Builder(deleteRequest).build())
+    }
 }
 
-/**
- * Function allows to change milliseconds to minutes and seconds
- * @param milliseconds song duration in milliseconds
- * @return duration in format M.SS (e.g. 2.43)
- */
-fun formatMilliseconds(milliseconds: Long): String
-{
-    val seconds = ceil(milliseconds / 1000.0)
-    val minutes = (seconds / 60).toInt()
-    val remainingSeconds = seconds % 60
-
-    return String.format(Locale.getDefault(), "%d.%02.0f", minutes, remainingSeconds)
-}
 
 
 
