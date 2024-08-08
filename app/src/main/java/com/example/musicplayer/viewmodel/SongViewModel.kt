@@ -1,14 +1,17 @@
 package com.example.musicplayer.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.SongsFinder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-class SongViewModel : ViewModel() {
+class SongViewModel(private val application: Application) : AndroidViewModel(application) {
 
     private val _items = MutableLiveData<ArrayList<Song>>()
     val items: LiveData<ArrayList<Song>> get() = _items
@@ -22,11 +25,23 @@ class SongViewModel : ViewModel() {
      * Method assigns all founded songs to _items
      */
     private fun getSongs() = runBlocking {
-        val sf = SongsFinder()
+        val sf = SongsFinder(application)
         var songList: ArrayList<Song>
         launch {
             songList = sf.getSongsFromDownload()
             _items.value = songList
         }
+    }
+}
+
+
+
+class SongViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SongViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SongViewModel(application) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
