@@ -1,9 +1,7 @@
 package com.example.musicplayer.adapters
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,24 +17,27 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
 import com.example.musicplayer.media.AudioPlayer
 import com.example.musicplayer.model.Song
-import java.io.File
-import java.util.Locale
-import kotlin.math.ceil
 
 class SongAdapter(
-    private val items: ArrayList<Song>,
+    private var items: ArrayList<Song>,
     private val context: Context,
     private val intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>)
     : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
 {
     private var audioPlayer: AudioPlayer? = null
     private var currentlyPlayingPosition = -1 // stores position of song that is currently playing
+    private var onClickListener: IonClickListener? = null
 
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view)
     {
         val titleTextView: TextView = view.findViewById(R.id.songTitle)
         val durationTextView: TextView = view.findViewById(R.id.songDuration)
         val playingImage: ImageView = view.findViewById(R.id.right_image)
+    }
+
+    interface IonClickListener
+    {
+        fun onLongClick(position: Int, item: Song)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder
@@ -57,8 +58,7 @@ class SongAdapter(
             songClicked(holder, item)
         }
         holder.itemView.setOnLongClickListener{
-            songLongClicked(holder, item)
-            Toast.makeText(context, "dont hold me!", Toast.LENGTH_SHORT).show()
+            onClickListener?.onLongClick(holder.adapterPosition, item)
             true
         }
     }
@@ -122,7 +122,7 @@ class SongAdapter(
                 if(which == 0)
                 {
                     Toast.makeText(context, "NOT IMPLEMENTED YET", Toast.LENGTH_SHORT).show()
-                    deleteSong(item)
+                    deleteSong(item, holder.adapterPosition)
                 }
                 else
                 {
@@ -134,10 +134,27 @@ class SongAdapter(
         dialog.show()
     }
 
-    private fun deleteSong(item: Song)
+    private fun deleteSong(item: Song, adapterPosition: Int)
     {
         val deleteRequest = MediaStore.createDeleteRequest(context.contentResolver, listOf(item.uri))
         intentSenderLauncher.launch(IntentSenderRequest.Builder(deleteRequest).build())
+        notifyItemRemoved(adapterPosition)
+    }
+
+
+    fun updateSongs(id: Int) {
+        items.removeAt(id)
+        //notifyDataSetChanged() // Powiadamia adapter, że dane uległy zmianie
+    }
+
+    fun updateSongsTest(songs: ArrayList<Song>) {
+        items = songs
+        //notifyDataSetChanged() // Powiadamia adapter, że dane uległy zmianie
+    }
+
+
+    fun setOnClickListener(listener: IonClickListener?) {
+        this.onClickListener = listener
     }
 }
 

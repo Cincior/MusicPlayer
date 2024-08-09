@@ -18,18 +18,32 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
 
     init
     {
-        getSongs()
+        //getSongs()
     }
 
     /**
      * Method assigns all founded songs to _items
      */
-    private fun getSongs() = runBlocking {
+    fun getSongs() = runBlocking {
         val sf = SongsFinder(application)
         var songList: ArrayList<Song>
         launch {
             songList = sf.getSongsFromDownload()
             _items.value = songList
+        }
+    }
+
+    fun updateSongs(newSongs: ArrayList<Song>)
+    {
+        _items.value = newSongs
+    }
+
+    fun deleteSong(id: Long)
+    {
+        val newSongs = _items.value
+        val r = newSongs?.removeIf{ it.id == id }
+        if (newSongs != null) {
+            updateSongs(newSongs)
         }
     }
 }
