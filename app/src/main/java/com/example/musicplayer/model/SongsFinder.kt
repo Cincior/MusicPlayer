@@ -26,10 +26,10 @@ class SongsFinder(private val application: Application)
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.DATA
+            MediaStore.Audio.Media.DATA,
         )
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("%/Download/%")
+        val selectionArgs = arrayOf("%Download/%")
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         application.contentResolver.query(
