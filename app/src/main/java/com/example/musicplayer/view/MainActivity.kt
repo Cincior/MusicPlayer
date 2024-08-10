@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -18,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
+import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
+import com.example.musicplayer.media.AudioPlayer
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.viewmodel.SongViewModel
 
@@ -28,9 +32,12 @@ class MainActivity : AppCompatActivity()
     companion object
     {
         var permissionGranted = false
-        var deletionId = -1 // Id of particular Song object that can be deleted
+        var deletionId = -1 // Id of particular Song that can be deleted
         var listId = -1 // Id of item in recyclerView that can be deleted
     }
+    private var audioPlayer: AudioPlayer? = null
+    private var previousPlayingPosition = -1 // stores position of song that is currently playing
+    private var previousHolder: ItemViewHolder? = null
     private val requestCodeReadMemory = 0
     private val songViewModel: SongViewModel by viewModels()
     private lateinit var songAdapter: SongAdapter
@@ -42,12 +49,13 @@ class MainActivity : AppCompatActivity()
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(R.layout.activity_main)
 
-        // MAIN LOGIC
+        // GET PERMISSIONS FIRST
         getPermission()
         if(!permissionGranted)
         {
             finish()
         }
+
 
         intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult())
         {
@@ -69,15 +77,16 @@ class MainActivity : AppCompatActivity()
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         songViewModel.getSongs()
-        songAdapter = SongAdapter(songViewModel.items.value!!, this, intentSenderLauncher)
+        songAdapter = SongAdapter(songViewModel.items.value!!, this)
         recyclerView.adapter = songAdapter
 
         songViewModel.items.observe(this, Observer { songs ->
-            songAdapter.updateSongsTest(songs)
+            songAdapter.updateSongs(songs)
         })
 
         songAdapter.setOnClickListener(object : SongAdapter.IonClickListener{
-            override fun onLongClick(position: Int, item: Song) {
+            override fun onLongClick(position: Int, item: Song)
+            {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
                 builder
                     .setTitle(item.title)
@@ -99,9 +108,89 @@ class MainActivity : AppCompatActivity()
                 dialog.show()
             }
 
+            override fun onClick(holder: ItemViewHolder, item: Song) {
+                val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
+                holder.itemView.startAnimation(animation)
+
+                if (previousPlayingPosition != -1)
+                {
+                    previousHolder?.let { changeAppearance(it) }
+                    audioPlayer?.stopSong()
+                }
+
+                if(previousPlayingPosition == holder.bindingAdapterPosition)
+                {
+                    audioPlayer?.stopSong()
+                    previousPlayingPosition = -1
+                    previousHolder?.let { resetAppearance(it) }
+                    previousHolder = null
+                }
+                else
+                {
+                    audioPlayer = AudioPlayer(this@MainActivity, item.uri).apply {
+                        playSong()
+                    }
+                    previousPlayingPosition = holder.bindingAdapterPosition
+                    if(previousHolder != null)
+                    {
+                        changeAppearance(previousHolder!!, holder)
+                    }
+                    else
+                    {
+                        changeAppearance(holder)
+                    }
+                    previousHolder = holder
+
+                }
+                //songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+            }
+
         })
 
 
+    }
+
+    private fun changeAppearance(previousHolder: ItemViewHolder, currentHolder: ItemViewHolder)
+    {
+        currentHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.skyBlue))
+        currentHolder.playingImage.visibility = View.VISIBLE
+        songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
+
+        previousHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
+        previousHolder.playingImage.visibility = View.INVISIBLE
+        songAdapter.notifyItemChanged(previousHolder.bindingAdapterPosition)
+
+    }
+    private fun changeAppearance(currentHolder: ItemViewHolder)
+    {
+        currentHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.skyBlue))
+        currentHolder.playingImage.visibility = View.VISIBLE
+        songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
+    }
+
+    private fun resetAppearance(currentHolder: ItemViewHolder)
+    {
+        currentHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
+        currentHolder.playingImage.visibility = View.INVISIBLE
+        songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
+    }
+
+    private fun checkClickedElement(
+        currentlyPlayingPosition: Int,
+        holder: ItemViewHolder,
+        position: Int
+    )
+    {
+        if(currentlyPlayingPosition == position)
+        {
+            holder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.skyBlue))
+            holder.playingImage.visibility = View.VISIBLE
+        }
+        else
+        {
+            holder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
+            holder.playingImage.visibility = View.INVISIBLE
+        }
     }
 
     /**

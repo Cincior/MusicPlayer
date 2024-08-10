@@ -10,7 +10,10 @@ import java.io.File
 import java.util.Locale
 import kotlin.math.ceil
 
-
+/**
+ * It allows to find audio files in specific directory with help of MediaStore
+ * @param application application context for getting contentResolver object
+ */
 class SongsFinder(private val application: Application)
 {
     /**
@@ -29,7 +32,7 @@ class SongsFinder(private val application: Application)
             MediaStore.Audio.Media.DATA,
         )
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("%Download/%")
+        val selectionArgs = arrayOf("%Download%") //DIRECTORY
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         application.contentResolver.query(
@@ -80,36 +83,6 @@ class SongsFinder(private val application: Application)
     }
 
     /**
-     * Getting song duration with MediaMetadataRetriever
-     * @param filePath path to audio file
-     * @return duration in milliseconds or 0 if file doesn't exist
-     */
-    private fun getSongDuration(filePath: String): Long // TIME IN MILLISECONDS
-    {
-        val file = File(filePath)
-        if (!file.exists())
-        {
-            return 0L
-        }
-
-        val retriever = MediaMetadataRetriever()
-        return try
-        {
-            retriever.setDataSource(filePath)
-            val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            durationStr?.toLongOrNull() ?: 0L
-        }
-        catch (e: IllegalArgumentException)
-        {
-            0L
-        }
-        finally
-        {
-            retriever.release()
-        }
-    }
-
-    /**
      * Function allows to change milliseconds to minutes and seconds
      * @param milliseconds song duration in milliseconds
      * @return duration in format M.SS (e.g. 2.43)
@@ -120,7 +93,7 @@ class SongsFinder(private val application: Application)
         val minutes = (seconds / 60).toInt()
         val remainingSeconds = seconds % 60
 
-        return String.format(Locale.getDefault(), "%d.%02.0f", minutes, remainingSeconds)
+        return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
     }
 
 
