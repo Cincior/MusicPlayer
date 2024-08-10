@@ -13,13 +13,8 @@ import com.example.musicplayer.R
 import com.example.musicplayer.media.AudioPlayer
 import com.example.musicplayer.model.Song
 
-class SongAdapter(
-    private var items: ArrayList<Song>,
-    private val context: Context)
-    : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
+class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
 {
-    private var audioPlayer: AudioPlayer? = null
-    private var currentlyPlayingPosition = -1 // stores position of song that is currently playing
     private var onActionListener: IonClickListener? = null
 
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view)
@@ -49,8 +44,6 @@ class SongAdapter(
 
         holder.itemView.setOnClickListener {
             onActionListener?.onClick(holder, item)
-//            songClicked(holder, item)
-//            checkClicedElement(currentlyPlayingPosition, holder, position)
         }
         holder.itemView.setOnLongClickListener{
             onActionListener?.onLongClick(holder.adapterPosition, item)
@@ -58,62 +51,15 @@ class SongAdapter(
         }
     }
 
-    private fun checkClicedElement(
-        currentlyPlayingPosition: Int,
-        holder: ItemViewHolder,
-        position: Int
-    )
-    {
-        if(currentlyPlayingPosition == position)
-        {
-            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
-            holder.playingImage.visibility = View.VISIBLE
-        }
-        else
-        {
-            holder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.white))
-            holder.playingImage.visibility = View.INVISIBLE
-        }
-    }
-
     override fun getItemCount() = items.size
 
-    /**
-    * Method responsible for playing or stopping music, showing animation and changing currentlyPlayingPosition variable
-    * @param holder contains whole song UI elements
-    * @param item clicked Song object
-    */
-    private fun songClicked(holder: ItemViewHolder, item: Song)
+    fun updateSongs(songs: ArrayList<Song>)
     {
-        val animation = AnimationUtils.loadAnimation(context, R.anim.song_clicked_animation)
-        holder.itemView.startAnimation(animation)
-
-        if (currentlyPlayingPosition != -1)
-        {
-            notifyItemChanged(currentlyPlayingPosition)
-            audioPlayer?.stopSong()
-        }
-        if(currentlyPlayingPosition == holder.adapterPosition)
-        {
-            audioPlayer?.stopSong()
-            currentlyPlayingPosition = -1
-        }
-        else
-        {
-            audioPlayer = AudioPlayer(context, item.uri).apply {
-                playSong()
-            }
-            currentlyPlayingPosition = holder.adapterPosition
-        }
-        notifyItemChanged(holder.adapterPosition)
-
-    }
-
-    fun updateSongs(songs: ArrayList<Song>) {
         items = songs
     }
 
-    fun setOnClickListener(listener: IonClickListener?) {
+    fun setOnClickListener(listener: IonClickListener?)
+    {
         this.onActionListener = listener
     }
 }
