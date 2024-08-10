@@ -1,10 +1,8 @@
 package com.example.musicplayer.view
 
-import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
-import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -13,9 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
@@ -23,9 +18,11 @@ import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
 import com.example.musicplayer.media.AudioPlayer
 import com.example.musicplayer.model.Song
+import com.example.musicplayer.view.mainActivityPackage.changeAppearance
+import com.example.musicplayer.view.mainActivityPackage.getPermission
+import com.example.musicplayer.view.mainActivityPackage.requestCodeReadMemory
+import com.example.musicplayer.view.mainActivityPackage.resetAppearance
 import com.example.musicplayer.viewmodel.SongViewModel
-
-
 
 class MainActivity : AppCompatActivity()
 {
@@ -37,8 +34,8 @@ class MainActivity : AppCompatActivity()
     }
     private var audioPlayer: AudioPlayer? = null
     private var previousPlayingPosition = -1 // stores position of song that is currently playing
-    private var previousHolder: ItemViewHolder? = null
-    private val requestCodeReadMemory = 0
+    private var previousHolder: ItemViewHolder? = null //stores previously clicked item ViewHolder
+
     private val songViewModel: SongViewModel by viewModels()
     private lateinit var songAdapter: SongAdapter
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest> // To ask user about deletion of song
@@ -50,13 +47,13 @@ class MainActivity : AppCompatActivity()
         setContentView(R.layout.activity_main)
 
         // GET PERMISSIONS FIRST
-        getPermission()
+        getPermission(this)
         if(!permissionGranted)
         {
             finish()
         }
 
-
+        // registering deletion
         intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult())
         {
             if (it.resultCode == RESULT_OK) {
@@ -73,18 +70,26 @@ class MainActivity : AppCompatActivity()
             }
         }
 
+
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         songViewModel.getSongs()
-        songAdapter = SongAdapter(songViewModel.items.value!!, this)
+        songAdapter = SongAdapter(songViewModel.items.value!!)
         recyclerView.adapter = songAdapter
 
-        songViewModel.items.observe(this, Observer { songs ->
+        songViewModel.items.observe(this) { songs ->
             songAdapter.updateSongs(songs)
-        })
+        }
 
+
+        // Passing to adapter implemented functions of interface
         songAdapter.setOnClickListener(object : SongAdapter.IonClickListener{
+            /**
+             * Function lets user open menu from which the user can delete an audio file.
+             * @param position position of clicked song
+             * @param item particular Song object that has been clicked
+             */
             override fun onLongClick(position: Int, item: Song)
             {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
@@ -108,13 +113,18 @@ class MainActivity : AppCompatActivity()
                 dialog.show()
             }
 
+            /**
+             * Function responsible for playing or stopping music, showing animation and changing currentlyPlayingPosition variable
+             * @param holder contains whole song UI elements
+             * @param item clicked Song object
+             */
             override fun onClick(holder: ItemViewHolder, item: Song) {
                 val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
                 holder.itemView.startAnimation(animation)
 
                 if (previousPlayingPosition != -1)
                 {
-                    previousHolder?.let { changeAppearance(it) }
+                    previousHolder?.let { changeAppearance(it, songAdapter, this@MainActivity) }
                     audioPlayer?.stopSong()
                 }
 
@@ -122,7 +132,7 @@ class MainActivity : AppCompatActivity()
                 {
                     audioPlayer?.stopSong()
                     previousPlayingPosition = -1
-                    previousHolder?.let { resetAppearance(it) }
+                    previousHolder?.let { resetAppearance(it, songAdapter, this@MainActivity) }
                     previousHolder = null
                 }
                 else
@@ -133,99 +143,17 @@ class MainActivity : AppCompatActivity()
                     previousPlayingPosition = holder.bindingAdapterPosition
                     if(previousHolder != null)
                     {
-                        changeAppearance(previousHolder!!, holder)
+                        changeAppearance(previousHolder!!, holder, songAdapter, this@MainActivity)
                     }
                     else
                     {
-                        changeAppearance(holder)
+                        changeAppearance(holder, songAdapter, this@MainActivity)
                     }
                     previousHolder = holder
 
                 }
-                //songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
             }
-
         })
-
-
-    }
-
-    private fun changeAppearance(previousHolder: ItemViewHolder, currentHolder: ItemViewHolder)
-    {
-        currentHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.skyBlue))
-        currentHolder.playingImage.visibility = View.VISIBLE
-        songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
-
-        previousHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
-        previousHolder.playingImage.visibility = View.INVISIBLE
-        songAdapter.notifyItemChanged(previousHolder.bindingAdapterPosition)
-
-    }
-    private fun changeAppearance(currentHolder: ItemViewHolder)
-    {
-        currentHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.skyBlue))
-        currentHolder.playingImage.visibility = View.VISIBLE
-        songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
-    }
-
-    private fun resetAppearance(currentHolder: ItemViewHolder)
-    {
-        currentHolder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
-        currentHolder.playingImage.visibility = View.INVISIBLE
-        songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
-    }
-
-    private fun checkClickedElement(
-        currentlyPlayingPosition: Int,
-        holder: ItemViewHolder,
-        position: Int
-    )
-    {
-        if(currentlyPlayingPosition == position)
-        {
-            holder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.skyBlue))
-            holder.playingImage.visibility = View.VISIBLE
-        }
-        else
-        {
-            holder.titleTextView.setTextColor(ContextCompat.getColor(this, R.color.white))
-            holder.playingImage.visibility = View.INVISIBLE
-        }
-    }
-
-    /**
-     * Asks user for needed permission (to get audio files from memory) in way that depends on currently using system
-     * assign permissionGranted = true if user gave permission
-     */
-    private fun getPermission()
-    {
-        if(getSystemVersion() >= 33)
-        {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED)
-            {
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
-                    requestCodeReadMemory)
-            }
-            else
-            {
-                permissionGranted = true
-            }
-        }
-        else
-        {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-            {
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    requestCodeReadMemory)
-            }
-            else
-            {
-                permissionGranted = true
-            }
-        }
-
     }
 
     override fun onRequestPermissionsResult(
@@ -245,14 +173,6 @@ class MainActivity : AppCompatActivity()
                 permissionGranted = false
             }
         }
-    }
-
-    /**
-     * @return version of android system
-     */
-    private fun getSystemVersion(): Int
-    {
-        return android.os.Build.VERSION.SDK_INT
     }
 
 }
