@@ -1,17 +1,12 @@
 package com.example.musicplayer.adapters
 
 import android.content.Context
-import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
@@ -20,13 +15,12 @@ import com.example.musicplayer.model.Song
 
 class SongAdapter(
     private var items: ArrayList<Song>,
-    private val context: Context,
-    private val intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>)
+    private val context: Context)
     : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
 {
     private var audioPlayer: AudioPlayer? = null
     private var currentlyPlayingPosition = -1 // stores position of song that is currently playing
-    private var onClickListener: IonClickListener? = null
+    private var onActionListener: IonClickListener? = null
 
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view)
     {
@@ -38,6 +32,7 @@ class SongAdapter(
     interface IonClickListener
     {
         fun onLongClick(position: Int, item: Song)
+        fun onClick(holder: ItemViewHolder, item: Song)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder
@@ -52,13 +47,13 @@ class SongAdapter(
         holder.titleTextView.text = item.title
         holder.durationTextView.text = item.duration
 
-        checkClicedElement(currentlyPlayingPosition, holder, position)
-
         holder.itemView.setOnClickListener {
-            songClicked(holder, item)
+            onActionListener?.onClick(holder, item)
+//            songClicked(holder, item)
+//            checkClicedElement(currentlyPlayingPosition, holder, position)
         }
         holder.itemView.setOnLongClickListener{
-            onClickListener?.onLongClick(holder.adapterPosition, item)
+            onActionListener?.onLongClick(holder.adapterPosition, item)
             true
         }
     }
@@ -114,47 +109,12 @@ class SongAdapter(
 
     }
 
-    private fun songLongClicked(holder: ItemViewHolder, item: Song) {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
-        builder
-            .setTitle(item.title)
-            .setItems(arrayOf("Delete", "Item Two")) { dialog, which ->
-                if(which == 0)
-                {
-                    Toast.makeText(context, "NOT IMPLEMENTED YET", Toast.LENGTH_SHORT).show()
-                    deleteSong(item, holder.adapterPosition)
-                }
-                else
-                {
-                    Toast.makeText(context, "clicked 2", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-        val dialog: AlertDialog = builder.create()
-        dialog.show()
-    }
-
-    private fun deleteSong(item: Song, adapterPosition: Int)
-    {
-        val deleteRequest = MediaStore.createDeleteRequest(context.contentResolver, listOf(item.uri))
-        intentSenderLauncher.launch(IntentSenderRequest.Builder(deleteRequest).build())
-        notifyItemRemoved(adapterPosition)
-    }
-
-
-    fun updateSongs(id: Int) {
-        items.removeAt(id)
-        //notifyDataSetChanged() // Powiadamia adapter, że dane uległy zmianie
-    }
-
-    fun updateSongsTest(songs: ArrayList<Song>) {
+    fun updateSongs(songs: ArrayList<Song>) {
         items = songs
-        //notifyDataSetChanged() // Powiadamia adapter, że dane uległy zmianie
     }
-
 
     fun setOnClickListener(listener: IonClickListener?) {
-        this.onClickListener = listener
+        this.onActionListener = listener
     }
 }
 
