@@ -20,6 +20,7 @@ class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<Son
     class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view)
     {
         val titleTextView: TextView = view.findViewById(R.id.songTitle)
+        val artistTextView: TextView = view.findViewById(R.id.songArtist)
         val durationTextView: TextView = view.findViewById(R.id.songDuration)
         val playingImage: ImageView = view.findViewById(R.id.right_image)
     }
@@ -41,6 +42,7 @@ class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<Son
         val item = items[position]
         holder.titleTextView.text = item.title
         holder.durationTextView.text = item.duration
+        holder.artistTextView.text = item.artist
 
         holder.itemView.setOnClickListener {
             onActionListener?.onClick(holder, item)

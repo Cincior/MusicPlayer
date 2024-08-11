@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.SongsFinder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -24,13 +26,11 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
     /**
      * Method assigns all founded songs to _items
      */
-    fun getSongs() = runBlocking {
+    fun getSongs()
+    {
         val sf = SongsFinder(application)
-        var songList: ArrayList<Song>
-        launch {
-            songList = sf.getSongsFromDownload()
-            _items.value = songList
-        }
+        val songList = sf.getSongsFromDownload()
+        _items.value = songList
     }
 
     fun updateSongs(newSongs: ArrayList<Song>)
