@@ -17,11 +17,11 @@ import kotlin.math.ceil
 class SongsFinder(private val application: Application)
 {
     /**
-     * Async method - getting all audio files takes a while
+     * Method for getting all audio files.
      * Looks for audio files in Download directory using MediaStore
      * @return list of founded songs in given directory
      */
-    suspend fun getSongsFromDownload(): ArrayList<Song> = withContext(Dispatchers.IO)
+    fun getSongsFromDownload(): ArrayList<Song>
     {
 
         val songs = ArrayList<Song>()
@@ -30,6 +30,7 @@ class SongsFinder(private val application: Application)
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.ARTIST
         )
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
         val selectionArgs = arrayOf("%Download%") //DIRECTORY
@@ -45,41 +46,23 @@ class SongsFinder(private val application: Application)
             val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
             val titleCol = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
             val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
+            val artistCol = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
 
             while(cursor.moveToNext())
             {
                 val id = cursor.getLong(idCol)
                 val title = cursor.getString(titleCol)
                 val duration = cursor.getLong(durationCol)
+                val artist = cursor.getString(artistCol)
                 val uri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
-                songs.add(Song(id, title, formatMilliseconds(duration), uri))
+                songs.add(Song(id, title, formatArtistName(artist), formatMilliseconds(duration), uri))
 
             }
         }
-        return@withContext songs
-//        var id = 0
-//        val songList = ArrayList<Song>()
-//        val folderPath = "/storage/emulated/0/Download/"
-//        val getFolder = File(folderPath) // THIS PATH CAN CHANGE
-//        if (getFolder.exists() && getFolder.isDirectory)
-//        {
-//            val files = getFolder.listFiles()
-//            if (files != null)
-//            {
-//                for (file in files)
-//                {
-//                    if (file.isFile && ( file.extension.equals("mp3", ignoreCase = true) || file.extension.equals("wav", ignoreCase = true)))
-//                    {
-//                        songList.add(Song(id, file.name, (getSongDuration(folderPath + file.name)), folderPath + file.name))
-//                    }
-//                    id++
-//                }
-//            }
-//        }
-//        return@withContext songList
+        return songs
     }
 
     /**
@@ -94,6 +77,18 @@ class SongsFinder(private val application: Application)
         val remainingSeconds = seconds % 60
 
         return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
+    }
+
+    private fun formatArtistName(artist: String): String
+    {
+        if(artist.contains("unknown"))
+        {
+            return "Artist unknown"
+        }
+        else
+        {
+            return artist
+        }
     }
 
 
