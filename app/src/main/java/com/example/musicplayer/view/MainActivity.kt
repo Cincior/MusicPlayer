@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.iterator
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
@@ -87,20 +86,20 @@ class MainActivity : AppCompatActivity() {
             /**
              * Function lets user open menu from which the user can delete an audio file.
              * @param position position of clicked song
-             * @param item particular Song object that has been clicked
+             * @param song particular Song object that has been clicked
              */
-            override fun onLongClick(position: Int, item: Song) {
+            override fun onLongClick(position: Int, song: Song) {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
                 builder
-                    .setTitle(item.title)
+                    .setTitle(song.title)
                     .setItems(arrayOf("Delete", "chuj")) { dialog, which ->
                         if (which == 0) {
                             val deleteRequest =
-                                MediaStore.createDeleteRequest(contentResolver, listOf(item.uri))
+                                MediaStore.createDeleteRequest(contentResolver, listOf(song.uri))
                             intentSenderLauncher.launch(
                                 IntentSenderRequest.Builder(deleteRequest).build()
                             )
-                            deletionId = item.id.toInt()
+                            deletionId = song.id.toInt()
                             listId = position
                         } else {
                             Toast.makeText(this@MainActivity, "clicked 2", Toast.LENGTH_SHORT)
@@ -115,9 +114,9 @@ class MainActivity : AppCompatActivity() {
             /**
              * Function responsible for playing or stopping music, showing animation and changing currentlyPlayingPosition variable
              * @param holder contains whole song UI elements
-             * @param item clicked Song object
+             * @param song clicked Song object
              */
-            override fun onClick(holder: ItemViewHolder, item: Song) {
+            override fun onClick(holder: ItemViewHolder, song: Song) {
                 val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
                 holder.itemView.startAnimation(animation)
 
@@ -125,23 +124,30 @@ class MainActivity : AppCompatActivity() {
                     //previousHolder = null
                     if (audioPlayer!!.isPlaying()) {
                         audioPlayer?.pauseSong()
-                        pauseAppearance(holder, songAdapter, this@MainActivity)
+                        songViewModel.updatePlayingState(song)
+                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+                        //pauseAppearance(holder, songAdapter, this@MainActivity)
                     } else {
                         audioPlayer?.resumeSong()
-                        playAppearance(holder, songAdapter, this@MainActivity)
+                        songViewModel.updatePlayingState(song)
+                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+                        //playAppearance(holder, songAdapter, this@MainActivity)
                     }
                     //previousPlayingPosition = -1
                     //previousHolder = null
                 } else {
                     audioPlayer?.stopSong()
-                    audioPlayer = AudioPlayer(this@MainActivity, item.uri).apply {
+                    audioPlayer = AudioPlayer(this@MainActivity, song.uri).apply {
                         playSong()
                     }
+                    songViewModel.updatePlayingState(song)
+                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+                    songAdapter.notifyItemChanged(previousPlayingPosition)
                     previousPlayingPosition = holder.bindingAdapterPosition
                     if (previousHolder != null) {
-                        changeAppearance(previousHolder!!, holder, songAdapter, this@MainActivity)
+                        //changeAppearance(previousHolder!!, holder, songAdapter, this@MainActivity)
                     } else {
-                        playAppearance(holder, songAdapter, this@MainActivity)
+                       //playAppearance(holder, songAdapter, this@MainActivity)
                     }
                     previousHolder = holder
 

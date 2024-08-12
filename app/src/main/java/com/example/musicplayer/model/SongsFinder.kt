@@ -2,11 +2,7 @@ package com.example.musicplayer.model
 
 import android.app.Application
 import android.content.ContentUris
-import android.media.MediaMetadataRetriever
 import android.provider.MediaStore
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
 import java.util.Locale
 import kotlin.math.ceil
 
@@ -62,7 +58,7 @@ class SongsFinder(private val application: Application) {
                         formatArtistName(artist),
                         formatMilliseconds(duration),
                         uri,
-                        false
+                        AudioState.NONE
                     )
                 )
 

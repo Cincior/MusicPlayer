@@ -8,5 +8,11 @@ data class Song(
     val artist: String,
     val duration: String,
     val uri: Uri,
-    var isPlaying: Boolean
+    var isPlaying: AudioState
 )
+
+enum class AudioState {
+    PLAY,
+    PAUSE,
+    NONE
+}
