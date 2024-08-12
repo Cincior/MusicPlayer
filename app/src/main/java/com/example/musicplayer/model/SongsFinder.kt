@@ -14,15 +14,13 @@ import kotlin.math.ceil
  * It allows to find audio files in specific directory with help of MediaStore
  * @param application application context for getting contentResolver object
  */
-class SongsFinder(private val application: Application)
-{
+class SongsFinder(private val application: Application) {
     /**
      * Method for getting all audio files.
      * Looks for audio files in Download directory using MediaStore
      * @return list of founded songs in given directory
      */
-    fun getSongsFromDownload(): ArrayList<Song>
-    {
+    fun getSongsFromDownload(): ArrayList<Song> {
 
         val songs = ArrayList<Song>()
         val projection = arrayOf(
@@ -48,8 +46,7 @@ class SongsFinder(private val application: Application)
             val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
             val artistCol = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
 
-            while(cursor.moveToNext())
-            {
+            while (cursor.moveToNext()) {
                 val id = cursor.getLong(idCol)
                 val title = cursor.getString(titleCol)
                 val duration = cursor.getLong(durationCol)
@@ -58,7 +55,16 @@ class SongsFinder(private val application: Application)
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
-                songs.add(Song(id, title, formatArtistName(artist), formatMilliseconds(duration), uri))
+                songs.add(
+                    Song(
+                        id,
+                        title,
+                        formatArtistName(artist),
+                        formatMilliseconds(duration),
+                        uri,
+                        false
+                    )
+                )
 
             }
         }
@@ -70,8 +76,7 @@ class SongsFinder(private val application: Application)
      * @param milliseconds song duration in milliseconds
      * @return duration in format M.SS (e.g. 2.43)
      */
-    private fun formatMilliseconds(milliseconds: Long): String
-    {
+    private fun formatMilliseconds(milliseconds: Long): String {
         val seconds = ceil(milliseconds / 1000.0)
         val minutes = (seconds / 60).toInt()
         val remainingSeconds = seconds % 60
@@ -79,15 +84,11 @@ class SongsFinder(private val application: Application)
         return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
     }
 
-    private fun formatArtistName(artist: String): String
-    {
-        if(artist.contains("unknown"))
-        {
-            return "Artist unknown"
-        }
-        else
-        {
-            return artist
+    private fun formatArtistName(artist: String): String {
+        return if (artist.contains("unknown")) {
+            "Artist unknown"
+        } else {
+            artist
         }
     }
 

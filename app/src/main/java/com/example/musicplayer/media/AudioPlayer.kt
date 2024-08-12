@@ -33,4 +33,9 @@ class AudioPlayer(private val context: Context,private val uri: Uri)
     {
         mediaPlayer?.start()
     }
+
+    fun isPlaying(): Boolean
+    {
+        return mediaPlayer?.isPlaying ?: false
+    }
 }
