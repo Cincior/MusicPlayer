@@ -3,7 +3,11 @@ package com.example.musicplayer.view
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.animation.AnimationUtils
+import android.widget.EditText
+import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -11,12 +15,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView.OnQueryTextListener
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
 import com.example.musicplayer.media.AudioPlayer
+import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.mainActivityPackage.*
 import com.example.musicplayer.viewmodel.SongViewModel
@@ -47,7 +53,7 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // registering deletion
+        // Registering deletion
         intentSenderLauncher =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult())
             {
@@ -68,7 +74,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
@@ -79,7 +84,6 @@ class MainActivity : AppCompatActivity() {
         songViewModel.items.observe(this) { songs ->
             songAdapter.updateSongs(songs)
         }
-
 
         // Passing to adapter implemented functions of interface
         songAdapter.setOnClickListener(object : SongAdapter.IonClickListener {
@@ -120,40 +124,79 @@ class MainActivity : AppCompatActivity() {
                 val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
                 holder.itemView.startAnimation(animation)
 
-                if (previousPlayingPosition == holder.bindingAdapterPosition) {
-                    //previousHolder = null
-                    if (audioPlayer!!.isPlaying()) {
-                        audioPlayer?.pauseSong()
-                        songViewModel.updatePlayingState(song)
-                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-                        //pauseAppearance(holder, songAdapter, this@MainActivity)
-                    } else {
-                        audioPlayer?.resumeSong()
-                        songViewModel.updatePlayingState(song)
-                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-                        //playAppearance(holder, songAdapter, this@MainActivity)
-                    }
-                    //previousPlayingPosition = -1
-                    //previousHolder = null
+//                if (previousPlayingPosition == holder.bindingAdapterPosition) {
+//                    if (audioPlayer!!.isPlaying()) {
+//                        audioPlayer?.pauseSong()
+//                        songViewModel.updatePlayingState(song)
+//                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+//                    } else {
+//                        audioPlayer?.resumeSong()
+//                        songViewModel.updatePlayingState(song)
+//                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+//                    }
+//                } else {
+//                    audioPlayer?.stopSong()
+//                    audioPlayer = AudioPlayer(this@MainActivity, song.uri).apply {
+//                        playSong()
+//                    }
+//                    songViewModel.updatePlayingState(song)
+//                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+//                    songAdapter.notifyItemChanged(previousPlayingPosition)
+//                    previousPlayingPosition = holder.bindingAdapterPosition
+//                    previousHolder = holder
+//
+//                }
+                //WYSZUKAM ITEMEK W SEARCHVIEW DAM ZEBY GRAL I POTEM PAUZE DAM JUZ Z WIDOKU NORMLANEGO BEZ WYSZUKANJE FRAZY TO BUGUJE SIE
+                if (song.isPlaying == AudioState.PLAY) {
+                    audioPlayer?.pauseSong()
+                    songViewModel.updatePlayingState(song)
+                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+                } else if(song.isPlaying == AudioState.PAUSE) {
+                    audioPlayer?.resumeSong()
+                    songViewModel.updatePlayingState(song)
+                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
                 } else {
                     audioPlayer?.stopSong()
                     audioPlayer = AudioPlayer(this@MainActivity, song.uri).apply {
                         playSong()
                     }
                     songViewModel.updatePlayingState(song)
-                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-                    songAdapter.notifyItemChanged(previousPlayingPosition)
+//                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+//                    if(previousPlayingPosition != -1) {
+//                        songAdapter.notifyItemChanged(previousPlayingPosition)
+//                    }
+                    songAdapter.notifyDataSetChanged()
                     previousPlayingPosition = holder.bindingAdapterPosition
-                    if (previousHolder != null) {
-                        //changeAppearance(previousHolder!!, holder, songAdapter, this@MainActivity)
-                    } else {
-                       //playAppearance(holder, songAdapter, this@MainActivity)
-                    }
                     previousHolder = holder
 
                 }
             }
         })
+
+        val searchView = findViewById<SearchView>(R.id.searchSong)
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+            override fun onQueryTextSubmit(p0: String?): Boolean {
+                TODO("Not yet implemented")
+            }
+
+            override fun onQueryTextChange(query: String): Boolean {
+                if (query != "") {
+                    songViewModel.filterSongs(query)
+                    println(songViewModel.items.value!!.size)
+                    songAdapter.notifyDataSetChanged()
+                } else {
+                    songViewModel.setDefaultSongs()
+                    songAdapter.notifyDataSetChanged()
+                    println("tutaj sa wszystkie z play " + songViewModel.items.value!!.filter {
+                        it.isPlaying == AudioState.PLAY
+                    })
+                }
+                return true
+            }
+
+        })
+
+
     }
 
     override fun onRequestPermissionsResult(

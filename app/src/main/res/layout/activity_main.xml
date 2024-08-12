@@ -13,11 +13,37 @@
         android:id="@+id/header"
         style="@style/headerStyle"
         android:text="@string/headerTitle" />
+    <SearchView
+        android:id="@+id/searchSong"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/search_view"
+        android:layout_marginHorizontal="10dp"
+        android:queryHint="song name"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="12dp"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/songList"
         style="@style/recyclerViewStyle"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:scrollbars="vertical"
-        android:fadeScrollbars="false" />
+        android:fadeScrollbars="false"
+        android:layout_weight="1"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TEST TEST TEST TEST TEST"
+            android:textColor="@color/skyBlue"
+            android:textSize="22sp" />
+
+    </LinearLayout>
 
 </LinearLayout>
