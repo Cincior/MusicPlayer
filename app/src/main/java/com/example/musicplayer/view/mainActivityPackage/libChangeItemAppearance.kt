@@ -8,8 +8,12 @@ import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
 
 
-fun changeAppearance(previousHolder: ItemViewHolder, currentHolder: ItemViewHolder, songAdapter: SongAdapter, context: Context)
-{
+fun changeAppearance(
+    previousHolder: ItemViewHolder,
+    currentHolder: ItemViewHolder,
+    songAdapter: SongAdapter,
+    context: Context
+) {
     currentHolder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
     currentHolder.playingImage.visibility = View.VISIBLE
     songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
@@ -19,16 +23,17 @@ fun changeAppearance(previousHolder: ItemViewHolder, currentHolder: ItemViewHold
     songAdapter.notifyItemChanged(previousHolder.bindingAdapterPosition)
 
 }
-fun changeAppearance(currentHolder: ItemViewHolder, songAdapter: SongAdapter, context: Context)
-{
+
+fun playAppearance(currentHolder: ItemViewHolder, songAdapter: SongAdapter, context: Context) {
     currentHolder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.skyBlue))
+    currentHolder.playingImage.setImageResource(R.drawable.ic_play)
     currentHolder.playingImage.visibility = View.VISIBLE
     songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
 }
 
-fun resetAppearance(currentHolder: ItemViewHolder, songAdapter: SongAdapter, context: Context)
-{
+fun pauseAppearance(currentHolder: ItemViewHolder, songAdapter: SongAdapter, context: Context) {
     currentHolder.titleTextView.setTextColor(ContextCompat.getColor(context, R.color.white))
-    currentHolder.playingImage.visibility = View.INVISIBLE
+    //currentHolder.playingImage.visibility = View.INVISIBLE
+    currentHolder.playingImage.setImageResource(R.drawable.ic_pause)
     songAdapter.notifyItemChanged(currentHolder.bindingAdapterPosition)
 }
