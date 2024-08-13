@@ -4,19 +4,13 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.SongsFinder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class SongViewModel(private val application: Application) : AndroidViewModel(application) {
 
-    lateinit var _allItems: ArrayList<Song>
+    lateinit var allItemsWithPreviousState: ArrayList<Song>
     private val _items = MutableLiveData<ArrayList<Song>>()
     val items: LiveData<ArrayList<Song>> get() = _items
 
@@ -33,39 +27,27 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
         val songList = sf.getSongsFromDownload()
         val songListOriginal = sfO.getSongsFromDownload()
         _items.value = songList
-        _allItems = songListOriginal
+        allItemsWithPreviousState = songListOriginal
     }
 
     private fun updateSongs(newSongs: ArrayList<Song>) {
         _items.value = newSongs
     }
 
-    fun setDefaultSongs()
-    {
-        val currentSongs = _items.value
-        var foundedSongState: AudioState? = null
-        val foundedSongId: Long
-        val foundedSong = currentSongs?.find {
-            it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
-        }
-        if(foundedSong == null) {
-            updateSongs(_allItems)
-            return
-        }
-        foundedSongState = foundedSong.isPlaying
-        foundedSongId = foundedSong.id
-
-        println("tutaj " +foundedSong)
-        val allSongs = _allItems.let { ArrayList<Song>(it) }
-        allSongs.forEach {
+    private fun updateAllSongs(changedSong: Song) {
+        allItemsWithPreviousState.forEach {
             it.isPlaying = AudioState.NONE
         }
-        val changedSong = allSongs?.find {
-            it.id == foundedSongId
+        allItemsWithPreviousState.find {
+            it.id == changedSong.id
+        }.let {
+            it?.isPlaying = changedSong.isPlaying
         }
-        println("tutaj rollie " + changedSong)
-        changedSong?.isPlaying = foundedSongState
-        updateSongs(allSongs)
+    }
+
+    fun setDefaultSongs()
+    {
+        updateSongs(allItemsWithPreviousState)
     }
 
     fun deleteSong(id: Long) {
@@ -92,47 +74,53 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
         }
         if (currentSongs != null) {
             updateSongs(currentSongs)
+            if (foundedSong != null) {
+                updateAllSongs(foundedSong.copy())
+            }
         }
     }
+
+
 
     fun filterSongs(query: String)
     {
-        val currentSongs = _items.value
-        var foundedSongState: AudioState? = null
-        val foundedSongId: Long?
-        val foundedSong = currentSongs?.find {
-            it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
-        }
-        foundedSongState = foundedSong?.isPlaying
-        foundedSongId = foundedSong?.id
-        val filteredSongs = getFilteredSongs(query)
-        filteredSongs.forEach {
-            it.isPlaying = AudioState.NONE
-        }
-        if(foundedSong == null) {
-            updateSongs(filteredSongs)
-            return
-        }
-
-        val songToChange = filteredSongs.find {
-            it.id == foundedSongId
-        }
-        songToChange?.isPlaying = foundedSongState!!
-        println("filtred z filterSong" +filteredSongs)
-        println("wczesniejsze" +foundedSong)
+        val allSongs = ArrayList(allItemsWithPreviousState)
+        val filteredSongs = getFilteredSongs(query, allSongs)
         updateSongs(filteredSongs)
+//        val currentSongs = _items.value
+//        var foundedSongState: AudioState? = null
+//        val foundedSongId: Long?
+//        val foundedSong = currentSongs?.find {
+//            it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
+//        }
+//        foundedSongState = foundedSong?.isPlaying
+//        foundedSongId = foundedSong?.id
+//        val filteredSongs = getFilteredSongs(query)
+//        filteredSongs.forEach {
+//            it.isPlaying = AudioState.NONE
+//        }
+//        if(foundedSong == null) {
+//            updateSongs(filteredSongs)
+//            return
+//        }
+//
+//        val songToChange = filteredSongs.find {
+//            it.id == foundedSongId
+//        }
+//        songToChange?.isPlaying = foundedSongState!!
+//        println("filtred z filterSong" +filteredSongs)
+//        println("wczesniejsze" +foundedSong)
+//        updateSongs(filteredSongs)
 
     }
 
-    private fun getFilteredSongs(query: String): ArrayList<Song> {
-        val allSongs = _allItems
-        println(allSongs)
+    private fun getFilteredSongs(query: String, allSongs: ArrayList<Song>): ArrayList<Song> {
         val filteredSongs = allSongs.filter {
             it.title.startsWith(query, true)
         }.let { ArrayList(it) }
         println("PO FILTRZE" + filteredSongs)
 
-        return filteredSongs ?: allSongs
+        return filteredSongs
     }
 
 }
