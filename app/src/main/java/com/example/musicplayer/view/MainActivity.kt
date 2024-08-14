@@ -16,6 +16,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView.OnQueryTextListener
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
@@ -24,6 +25,7 @@ import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
 import com.example.musicplayer.media.AudioPlayer
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
+import com.example.musicplayer.view.fragment.PlayingManagerFragment
 import com.example.musicplayer.view.mainActivityPackage.*
 import com.example.musicplayer.viewmodel.SongViewModel
 
@@ -52,6 +54,19 @@ class MainActivity : AppCompatActivity() {
         if (!permissionGranted) {
             finish()
         }
+
+        // Add fragment
+//        if (savedInstanceState == null) {
+//            supportFragmentManager.commit {
+//                setReorderingAllowed(true)
+//                add(R.id.fragment_container_view, PlayingManagerFragment())
+//            }
+//            supportFragmentManager.commit {
+//                setReorderingAllowed(true)
+//                add<PlayingManagerFragment>(R.id.fragment_container_view)
+//            }
+//        }
+
 
         // Registering deletion
         intentSenderLauncher =
@@ -121,7 +136,8 @@ class MainActivity : AppCompatActivity() {
              * @param song clicked Song object
              */
             override fun onClick(holder: ItemViewHolder, song: Song) {
-                val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
+                val animation =
+                    AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
                 holder.itemView.startAnimation(animation)
 
 //                if (previousPlayingPosition == holder.bindingAdapterPosition) {
@@ -146,12 +162,20 @@ class MainActivity : AppCompatActivity() {
 //                    previousHolder = holder
 //
 //                }
-                //WYSZUKAM ITEMEK W SEARCHVIEW DAM ZEBY GRAL I POTEM PAUZE DAM JUZ Z WIDOKU NORMLANEGO BEZ WYSZUKANJE FRAZY TO BUGUJE SIE
+//                val fragment = supportFragmentManager.findFragmentById(R.id.playingManagerFragment) as PlayingManagerFragment
+//                fragment.setSongTitle(song)
+                val param2 = "Param2Value"
+                val fragment = PlayingManagerFragment.newInstance(song.title, param2)
+
+                // Add the Fragment to the container
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_view, fragment)
+                    .commit()
                 if (song.isPlaying == AudioState.PLAY) {
                     audioPlayer?.pauseSong()
                     songViewModel.updatePlayingState(song)
                     songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-                } else if(song.isPlaying == AudioState.PAUSE) {
+                } else if (song.isPlaying == AudioState.PAUSE) {
                     audioPlayer?.resumeSong()
                     songViewModel.updatePlayingState(song)
                     songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
@@ -174,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         val searchView = findViewById<SearchView>(R.id.searchSong)
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 TODO("Not yet implemented")
             }
