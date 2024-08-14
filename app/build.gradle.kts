@@ -47,6 +47,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.fragment.ktx)
 
 
 }

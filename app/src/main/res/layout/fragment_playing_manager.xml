@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.fragment.PlayingManagerFragment"
+    android:layout_marginHorizontal="20dp"
+    android:id="@+id/playingManagerFragment">
+
+    <TextView
+        android:id="@+id/songTitleFragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CHUJ"
+        android:textSize="26sp"
+        android:layout_gravity="center|start"/>
+    <ImageButton
+        android:id="@+id/btnPlayPauseFragment"
+        android:backgroundTint="@color/transparent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|end"
+        android:src="@drawable/ic_play"/>
+
+</FrameLayout>
