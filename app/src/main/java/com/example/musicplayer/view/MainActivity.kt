@@ -55,19 +55,6 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // Add fragment
-//        if (savedInstanceState == null) {
-//            supportFragmentManager.commit {
-//                setReorderingAllowed(true)
-//                add(R.id.fragment_container_view, PlayingManagerFragment())
-//            }
-//            supportFragmentManager.commit {
-//                setReorderingAllowed(true)
-//                add<PlayingManagerFragment>(R.id.fragment_container_view)
-//            }
-//        }
-
-
         // Registering deletion
         intentSenderLauncher =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult())
@@ -136,41 +123,11 @@ class MainActivity : AppCompatActivity() {
              * @param song clicked Song object
              */
             override fun onClick(holder: ItemViewHolder, song: Song) {
-                val animation =
-                    AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
+                val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
                 holder.itemView.startAnimation(animation)
 
-//                if (previousPlayingPosition == holder.bindingAdapterPosition) {
-//                    if (audioPlayer!!.isPlaying()) {
-//                        audioPlayer?.pauseSong()
-//                        songViewModel.updatePlayingState(song)
-//                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-//                    } else {
-//                        audioPlayer?.resumeSong()
-//                        songViewModel.updatePlayingState(song)
-//                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-//                    }
-//                } else {
-//                    audioPlayer?.stopSong()
-//                    audioPlayer = AudioPlayer(this@MainActivity, song.uri).apply {
-//                        playSong()
-//                    }
-//                    songViewModel.updatePlayingState(song)
-//                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-//                    songAdapter.notifyItemChanged(previousPlayingPosition)
-//                    previousPlayingPosition = holder.bindingAdapterPosition
-//                    previousHolder = holder
-//
-//                }
-//                val fragment = supportFragmentManager.findFragmentById(R.id.playingManagerFragment) as PlayingManagerFragment
-//                fragment.setSongTitle(song)
-                val param2 = "Param2Value"
-                val fragment = PlayingManagerFragment.newInstance(song.title, param2)
 
-                // Add the Fragment to the container
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_view, fragment)
-                    .commit()
+
                 if (song.isPlaying == AudioState.PLAY) {
                     audioPlayer?.pauseSong()
                     songViewModel.updatePlayingState(song)
@@ -194,6 +151,26 @@ class MainActivity : AppCompatActivity() {
                     previousHolder = holder
 
                 }
+                val param2 = song.isPlaying.toString()
+                val fragment = PlayingManagerFragment.newInstance(song.title, param2)
+                fragment.setActionListener(object : PlayingManagerFragment.onActionListener {
+                    override fun onButtonPlayPauseClicked() {
+                        if (song.isPlaying == AudioState.PLAY) {
+                            audioPlayer?.pauseSong()
+                            songViewModel.updatePlayingState(song)
+                        } else if (song.isPlaying == AudioState.PAUSE) {
+                            audioPlayer?.resumeSong()
+                            songViewModel.updatePlayingState(song)
+                        }
+                        fragment.changePlayPauseButtonIcon(song.isPlaying)
+                        songAdapter.notifyDataSetChanged()
+                    }
+                })
+                //fragment.changePlayPauseButtonIcon()
+                // Add the Fragment to the container
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_view, fragment)
+                    .commit()
             }
         })
 

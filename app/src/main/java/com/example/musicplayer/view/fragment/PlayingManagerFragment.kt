@@ -1,5 +1,6 @@
 package com.example.musicplayer.view.fragment
 
+import android.media.Image
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -7,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.R
 import com.example.musicplayer.model.AudioState
@@ -17,7 +19,7 @@ import com.example.musicplayer.viewmodel.SongViewModel
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private const val ARG_PARAM2 = "audioState"
 
 /**
  * A simple [Fragment] subclass.
@@ -27,15 +29,22 @@ private const val ARG_PARAM2 = "param2"
 class PlayingManagerFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
-    private var param2: String? = null
-    private lateinit var songViewModel: SongViewModel
+    private var audioState: String? = null
+
+    //private lateinit var songViewModel: SongViewModel
     private lateinit var textViewTitle: TextView
+    private lateinit var buttonPlayPause: ImageButton
+    private var actionListener: onActionListener? = null
+
+    interface onActionListener {
+        fun onButtonPlayPauseClicked()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            audioState = it.getString(ARG_PARAM2)
         }
     }
 
@@ -43,20 +52,27 @@ class PlayingManagerFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val playingManagerView = inflater.inflate(R.layout.fragment_playing_manager, container, false)
+        val playingManagerView =
+            inflater.inflate(R.layout.fragment_playing_manager, container, false)
 
+        //songViewModel = ViewModelProvider(requireActivity())[songViewModel::class.java]
         textViewTitle = playingManagerView.findViewById(R.id.songTitleFragment)
         textViewTitle.text = param1
+
+        buttonPlayPause = playingManagerView.findViewById(R.id.btnPlayPauseFragment)
+
+        when(audioState) {
+            AudioState.PLAY.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_play_btn))
+            AudioState.PAUSE.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_pause_btn))
+        }
+
+        buttonPlayPause.setOnClickListener {
+            actionListener?.onButtonPlayPauseClicked()
+        }
         // Inflate the layout for this fragment
         return playingManagerView
     }
 
-    private fun getCurrentSong(): Song {
-        val currentSong = songViewModel.allItemsWithPreviousState.find {
-            it.isPlaying == AudioState.PLAY
-        }
-        return currentSong?.copy()!!
-    }
 
     companion object {
         /**
@@ -78,8 +94,25 @@ class PlayingManagerFragment : Fragment() {
             }
     }
 
-    fun setSongTitle(song: Song)
-    {
+    fun setSongTitle(song: Song) {
         textViewTitle.append(song.title)
+    }
+
+    fun changePlayPauseButtonIcon(audioState: AudioState) {
+       when(audioState){
+           AudioState.PLAY -> {
+               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_btn))
+           }
+           AudioState.PAUSE -> {
+               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause_btn))
+           }
+           else -> println("ERR!")
+       }
+
+
+    }
+
+    fun setActionListener(listener: onActionListener) {
+        this.actionListener = listener
     }
 }
