@@ -53,6 +53,7 @@ class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<Son
                 holder.titleTextView.setTextColor(ContextCompat.getColor(holder.titleTextView.context, R.color.skyBlue))
             }
             AudioState.PAUSE -> {
+                holder.playingImage.visibility = View.VISIBLE
                 holder.playingImage.setImageResource(R.drawable.ic_pause)
                 holder.titleTextView.setTextColor(ContextCompat.getColor(holder.titleTextView.context, R.color.white))
             }

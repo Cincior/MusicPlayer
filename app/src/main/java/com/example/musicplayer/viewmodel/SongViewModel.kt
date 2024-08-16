@@ -10,7 +10,7 @@ import com.example.musicplayer.model.SongsFinder
 
 class SongViewModel(private val application: Application) : AndroidViewModel(application) {
 
-    lateinit var allItemsWithPreviousState: ArrayList<Song>
+    private lateinit var allItemsWithPreviousState: ArrayList<Song>
     private val _items = MutableLiveData<ArrayList<Song>>()
     val items: LiveData<ArrayList<Song>> get() = _items
 
@@ -70,6 +70,7 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
         }
         when (foundedSongState) {
             AudioState.PLAY -> foundedSong?.isPlaying = AudioState.PAUSE
+            AudioState.PAUSE -> foundedSong?.isPlaying = AudioState.PLAY
             else -> foundedSong?.isPlaying = AudioState.PLAY
         }
         if (currentSongs != null) {

@@ -11,7 +11,7 @@
         android:id="@+id/songTitleFragment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CHUJ"
+        android:text=""
         android:textSize="26sp"
         android:layout_gravity="center|start"/>
     <ImageButton
@@ -20,6 +20,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center|end"
-        android:src="@drawable/ic_play"/>
+        android:src="@drawable/ic_play_btn"/>
 
 </FrameLayout>
