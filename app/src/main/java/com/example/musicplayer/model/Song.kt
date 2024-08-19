@@ -14,5 +14,6 @@ data class Song(
 enum class AudioState {
     PLAY,
     PAUSE,
+    END,
     NONE
 }

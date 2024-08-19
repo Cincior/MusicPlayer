@@ -12,27 +12,26 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
-import com.example.musicplayer.media.AudioPlayer
+import com.example.musicplayer.media.AudioPlayerManager
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.fragment.PlayingManagerFragment
-import com.example.musicplayer.view.mainActivityPackage.*
+import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
 
 class MainActivity : AppCompatActivity() {
     companion object {
         var permissionGranted = false
-        var deletionId = -1 // Id of particular Song that can be deleted
-        var listId = -1 // Id of item in recyclerView that can be deleted
-        var setBottomHeight = false
     }
-    private var audioPlayer: AudioPlayer? = null
+    var deletionId = -1 // Id of particular Song that can be deleted
+    var listId = -1 // Id of item in recyclerView that can be deleted
+    private var setBottomHeight = false
+    private var audioPlayerManager: AudioPlayerManager? = null
 
     private val songViewModel: SongViewModel by viewModels()
     private lateinit var songAdapter: SongAdapter
@@ -49,24 +48,8 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // Registering deletion
-        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-                if (it.resultCode == RESULT_OK) {
-                    if (deletionId != -1) {
-                        songViewModel.deleteSong(deletionId.toLong())
-                        songAdapter.notifyItemRangeChanged(listId, songViewModel.items.value!!.size)
-                        songAdapter.notifyItemRemoved(listId)
-                        deletionId = -1
-                        listId = -1
-                    }
-                } else {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Song couldn't be deleted",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
+
+        registerIntentSender()
 
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
@@ -83,6 +66,29 @@ class MainActivity : AppCompatActivity() {
         val searchView = findViewById<SearchView>(R.id.searchSong)
         initializeSearchViewOnActionListener(searchView)
 
+        audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
+
+    }
+
+    private fun registerIntentSender() {
+        // Registering deletion
+        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+            if (it.resultCode == RESULT_OK) {
+                if (deletionId != -1) {
+                    songViewModel.deleteSong(deletionId.toLong())
+                    songAdapter.notifyItemRangeChanged(listId, songViewModel.items.value!!.size)
+                    songAdapter.notifyItemRemoved(listId)
+                    deletionId = -1
+                    listId = -1
+                }
+            } else {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Song couldn't be deleted",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -114,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
                 builder
                     .setTitle(song.title)
-                    .setItems(arrayOf("Delete", "chuj")) { _, which ->
+                    .setItems(arrayOf("Delete", "Cancel")) { _, which ->
                         if (which == 0) {
                             val deleteRequest =
                                 MediaStore.createDeleteRequest(contentResolver, listOf(song.uri))
@@ -123,12 +129,8 @@ class MainActivity : AppCompatActivity() {
                             )
                             deletionId = song.id.toInt()
                             listId = position
-                        } else {
-                            Toast.makeText(this@MainActivity, "clicked 2", Toast.LENGTH_SHORT)
-                                .show()
                         }
                     }
-
                 val dialog: AlertDialog = builder.create()
                 dialog.show()
             }
@@ -140,39 +142,25 @@ class MainActivity : AppCompatActivity() {
              */
             override fun onClick(holder: ItemViewHolder, song: Song) {
                 showBottomLayout()
-                if (song.isPlaying == AudioState.PLAY) {
-                    audioPlayer?.pauseSong()
-                    songViewModel.updatePlayingState(song)
-                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-                } else if (song.isPlaying == AudioState.PAUSE) {
-                    audioPlayer?.resumeSong()
-                    songViewModel.updatePlayingState(song)
-                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-                } else {
-                    audioPlayer?.stopSong()
-                    audioPlayer = AudioPlayer(this@MainActivity, song.uri).apply {
-                        playSong()
-                    }
-                    songViewModel.updatePlayingState(song)
-                    songAdapter.notifyDataSetChanged()
 
+                when (song.isPlaying) {
+                    AudioState.PLAY -> audioPlayerManager?.pauseSong(song, holder)
+                    AudioState.PAUSE -> audioPlayerManager?.resumeSong(song, holder)
+                    else -> {
+                        audioPlayerManager?.playSong(song)
+                    }
                 }
-                val param2 = song.isPlaying.toString()
-                val fragment = PlayingManagerFragment.newInstance(song.title, param2)
-                fragment.setActionListener(object : PlayingManagerFragment.onActionListener {
+
+                val fragment = PlayingManagerFragment.newInstance(song.title, song.isPlaying.toString())
+                fragment.setActionListener(object : PlayingManagerFragment.IonActionListener {
                     override fun onButtonPlayPauseClicked() {
-                        if (song.isPlaying == AudioState.PLAY) {
-                            audioPlayer?.pauseSong()
-                            songViewModel.updatePlayingState(song)
-                        } else if (song.isPlaying == AudioState.PAUSE) {
-                            audioPlayer?.resumeSong()
-                            songViewModel.updatePlayingState(song)
+                        when (song.isPlaying) {
+                            AudioState.PLAY -> audioPlayerManager?.pauseSongFragment(song)
+                            AudioState.PAUSE -> audioPlayerManager?.resumeSongFragment(song)
+                            else -> audioPlayerManager?.playSong(song)
                         }
-                        fragment.changePlayPauseButtonIcon(song.isPlaying)
-                        songAdapter.notifyDataSetChanged()
                     }
                 })
-                // Add the Fragment to the container
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container_view, fragment)
                     .commit()
@@ -199,11 +187,11 @@ class MainActivity : AppCompatActivity() {
     {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
-                TODO("Not yet implemented")
+                onQueryTextChange(p0)
+                return true
             }
-
-            override fun onQueryTextChange(query: String): Boolean {
-                if (query != "") {
+            override fun onQueryTextChange(query: String?): Boolean {
+                if (query != null && query != "") {
                     songViewModel.filterSongs(query)
                     songAdapter.notifyDataSetChanged()
                 } else {
@@ -212,8 +200,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 return true
             }
-
         })
     }
-
 }
