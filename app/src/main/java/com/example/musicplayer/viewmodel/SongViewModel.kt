@@ -71,6 +71,7 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
         when (foundedSongState) {
             AudioState.PLAY -> foundedSong?.isPlaying = AudioState.PAUSE
             AudioState.PAUSE -> foundedSong?.isPlaying = AudioState.PLAY
+            AudioState.END -> foundedSong?.isPlaying = AudioState.NONE
             else -> foundedSong?.isPlaying = AudioState.PLAY
         }
         if (currentSongs != null) {

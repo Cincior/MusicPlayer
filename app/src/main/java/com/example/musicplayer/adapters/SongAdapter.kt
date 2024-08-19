@@ -60,6 +60,9 @@ class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<Son
                 gif.pause()
                 holder.titleTextView.setTextColor(ContextCompat.getColor(holder.titleTextView.context, R.color.white))
             }
+            AudioState.END -> {
+                //
+            }
         }
 
 

@@ -1,18 +1,20 @@
 package com.example.musicplayer.view.fragment
 
-import android.media.Image
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.R
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
+import com.example.musicplayer.view.PlayerActivity
 import com.example.musicplayer.viewmodel.SongViewModel
 
 
@@ -31,12 +33,13 @@ class PlayingManagerFragment : Fragment() {
     private var param1: String? = null
     private var audioState: String? = null
 
-    //private lateinit var songViewModel: SongViewModel
+    private lateinit var songViewModel: SongViewModel
     private lateinit var textViewTitle: TextView
     private lateinit var buttonPlayPause: ImageButton
-    private var actionListener: onActionListener? = null
+    private lateinit var titleSection: LinearLayout
+    private var actionListener: IonActionListener? = null
 
-    interface onActionListener {
+    interface IonActionListener {
         fun onButtonPlayPauseClicked()
     }
 
@@ -46,6 +49,7 @@ class PlayingManagerFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             audioState = it.getString(ARG_PARAM2)
         }
+        songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -55,22 +59,53 @@ class PlayingManagerFragment : Fragment() {
         val playingManagerView =
             inflater.inflate(R.layout.fragment_playing_manager, container, false)
 
-        //songViewModel = ViewModelProvider(requireActivity())[songViewModel::class.java]
+        songViewModel.items.observe(viewLifecycleOwner) { songs ->
+            changeFragmentLayout(songs)
+        }
         textViewTitle = playingManagerView.findViewById(R.id.songTitleFragment)
-        textViewTitle.text = param1
 
         buttonPlayPause = playingManagerView.findViewById(R.id.btnPlayPauseFragment)
-
-        when(audioState) {
-            AudioState.PLAY.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_pause_btn))
-            AudioState.PAUSE.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_play_btn))
-        }
-
         buttonPlayPause.setOnClickListener {
             actionListener?.onButtonPlayPauseClicked()
         }
+
+        titleSection = playingManagerView.findViewById(R.id.titleSectionFragment)
+        titleSection.setOnClickListener {
+            val playerActivityIntent = Intent(requireContext(), PlayerActivity::class.java)
+            startActivity(playerActivityIntent)
+        }
+
         // Inflate the layout for this fragment
         return playingManagerView
+    }
+
+    private fun changeFragmentLayout(songs: ArrayList<Song>?) {
+        songs?.find {
+            it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
+        }.let {
+            textViewTitle.text = it?.title
+            when (it?.isPlaying) {
+                AudioState.PLAY -> {
+                    buttonPlayPause.setImageDrawable(
+                        ContextCompat.getDrawable(
+                            requireContext(),
+                            R.drawable.ic_pause_btn
+                        )
+                    )
+                }
+
+                AudioState.PAUSE -> {
+                    buttonPlayPause.setImageDrawable(
+                        ContextCompat.getDrawable(
+                            requireContext(),
+                            R.drawable.ic_play_btn
+                        )
+                    )
+                }
+
+                else -> TODO()
+            }
+        }
     }
 
 
@@ -94,25 +129,33 @@ class PlayingManagerFragment : Fragment() {
             }
     }
 
-    fun setSongTitle(song: Song) {
-        textViewTitle.append(song.title)
-    }
-
     fun changePlayPauseButtonIcon(audioState: AudioState) {
-       when(audioState){
-           AudioState.PLAY -> {
-               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause_btn))
-           }
-           AudioState.PAUSE -> {
-               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_btn))
-           }
-           else -> println("ERR!")
-       }
+        when (audioState) {
+            AudioState.PLAY -> {
+                buttonPlayPause.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.ic_pause_btn
+                    )
+                )
+            }
+
+            AudioState.PAUSE -> {
+                buttonPlayPause.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        requireContext(),
+                        R.drawable.ic_play_btn
+                    )
+                )
+            }
+
+            else -> println("ERR!")
+        }
 
 
     }
 
-    fun setActionListener(listener: onActionListener) {
+    fun setActionListener(listener: IonActionListener) {
         this.actionListener = listener
     }
 }

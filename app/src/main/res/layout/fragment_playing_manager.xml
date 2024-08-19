@@ -7,7 +7,7 @@
     android:paddingStart="10dp"
     android:id="@+id/playingManagerFragment"
     android:layout_gravity="center_horizontal"
-    android:background="@color/DarkPink">
+    android:background="@color/lightBlue">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,6 +17,7 @@
 >
 
         <LinearLayout
+            android:id="@+id/titleSectionFragment"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -37,7 +38,7 @@
                 android:maxLines="2"
                 android:text=""
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 android:textStyle="bold"/>
 
         </LinearLayout>

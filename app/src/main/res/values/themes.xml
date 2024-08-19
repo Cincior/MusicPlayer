@@ -4,7 +4,7 @@
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="colorPrimary">@color/darkBlue</item>
-        <item name="colorPrimaryDark">@color/lightBlueItem</item>
+        <item name="colorPrimaryDark">@color/mediumBlue</item>
         <item name="colorAccent">@color/skyBlue</item>
 
         <item name="android:navigationBarColor">@color/darkBlue</item>
@@ -21,7 +21,7 @@
         <item name="android:statusBarColor">@color/darkBlue</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="colorPrimary">@color/black</item>
-        <item name="colorPrimaryDark">@color/lightBlueItem</item>
+        <item name="colorPrimaryDark">@color/mediumBlue</item>
         <item name="colorAccent">@color/skyBlue</item>
     </style>
 </resources>
