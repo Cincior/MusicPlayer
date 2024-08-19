@@ -70,14 +70,15 @@
             app:layout_constraintTop_toBottomOf="@id/songArtist" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <ImageView
+
+    <pl.droidsonroids.gif.GifImageView
         android:id="@+id/right_image"
         android:layout_width="58dp"
         android:layout_height="58dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:src="@drawable/ic_play"
+        android:src="@drawable/music_playing"
         android:visibility="invisible"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

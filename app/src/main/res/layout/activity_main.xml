@@ -20,9 +20,10 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/songList"
-        style="@style/recyclerViewStyle"/>
+        style="@style/recyclerViewStyle" />
 
     <LinearLayout
+        android:id="@+id/bottomLinearLayout"
         style="@style/bottomLinearLayoutStyle">
 
         <FrameLayout

@@ -4,22 +4,51 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".view.fragment.PlayingManagerFragment"
-    android:layout_marginHorizontal="20dp"
-    android:id="@+id/playingManagerFragment">
+    android:paddingStart="10dp"
+    android:id="@+id/playingManagerFragment"
+    android:layout_gravity="center_horizontal"
+    android:background="@color/DarkPink">
 
-    <TextView
-        android:id="@+id/songTitleFragment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="26sp"
-        android:layout_gravity="center|start"/>
-    <ImageButton
-        android:id="@+id/btnPlayPauseFragment"
-        android:backgroundTint="@color/transparent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|end"
-        android:src="@drawable/ic_play_btn"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/currently_playing"
+                android:textColor="#FFFFFF"
+                android:textStyle="italic"
+                android:textSize="13sp"/>
+            <TextView
+                android:id="@+id/songTitleFragment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:text=""
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+
+        <ImageButton
+            android:id="@+id/btnPlayPauseFragment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/transparent"
+            android:src="@drawable/ic_play_btn"/>
+    </LinearLayout>
 
 </FrameLayout>

@@ -3,10 +3,7 @@ package com.example.musicplayer.view
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.animation.AnimationUtils
-import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -15,8 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView.OnQueryTextListener
-import androidx.fragment.app.commit
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
@@ -34,11 +30,9 @@ class MainActivity : AppCompatActivity() {
         var permissionGranted = false
         var deletionId = -1 // Id of particular Song that can be deleted
         var listId = -1 // Id of item in recyclerView that can be deleted
+        var setBottomHeight = false
     }
-
     private var audioPlayer: AudioPlayer? = null
-    private var previousPlayingPosition = -1 // stores position of song that is currently playing
-    private var previousHolder: ItemViewHolder? = null //stores previously clicked item ViewHolder
 
     private val songViewModel: SongViewModel by viewModels()
     private lateinit var songAdapter: SongAdapter
@@ -56,9 +50,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Registering deletion
-        intentSenderLauncher =
-            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult())
-            {
+        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
                 if (it.resultCode == RESULT_OK) {
                     if (deletionId != -1) {
                         songViewModel.deleteSong(deletionId.toLong())
@@ -86,7 +78,31 @@ class MainActivity : AppCompatActivity() {
         songViewModel.items.observe(this) { songs ->
             songAdapter.updateSongs(songs)
         }
+        initializeAdapterOnClickFunctions(songAdapter)
 
+        val searchView = findViewById<SearchView>(R.id.searchSong)
+        initializeSearchViewOnActionListener(searchView)
+
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == requestCodeReadMemory) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                permissionGranted = true
+            } else {
+                Toast.makeText(this, "Odmowa uprawnien", Toast.LENGTH_SHORT).show()
+                permissionGranted = false
+            }
+        }
+    }
+
+    private fun initializeAdapterOnClickFunctions(songAdapter: SongAdapter)
+    {
         // Passing to adapter implemented functions of interface
         songAdapter.setOnClickListener(object : SongAdapter.IonClickListener {
             /**
@@ -98,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
                 builder
                     .setTitle(song.title)
-                    .setItems(arrayOf("Delete", "chuj")) { dialog, which ->
+                    .setItems(arrayOf("Delete", "chuj")) { _, which ->
                         if (which == 0) {
                             val deleteRequest =
                                 MediaStore.createDeleteRequest(contentResolver, listOf(song.uri))
@@ -118,16 +134,12 @@ class MainActivity : AppCompatActivity() {
             }
 
             /**
-             * Function responsible for playing or stopping music, showing animation and changing currentlyPlayingPosition variable
+             * Function responsible for playing or stopping music
              * @param holder contains whole song UI elements
              * @param song clicked Song object
              */
             override fun onClick(holder: ItemViewHolder, song: Song) {
-                val animation = AnimationUtils.loadAnimation(this@MainActivity, R.anim.song_clicked_animation)
-                holder.itemView.startAnimation(animation)
-
-
-
+                showBottomLayout()
                 if (song.isPlaying == AudioState.PLAY) {
                     audioPlayer?.pauseSong()
                     songViewModel.updatePlayingState(song)
@@ -142,13 +154,7 @@ class MainActivity : AppCompatActivity() {
                         playSong()
                     }
                     songViewModel.updatePlayingState(song)
-//                    songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
-//                    if(previousPlayingPosition != -1) {
-//                        songAdapter.notifyItemChanged(previousPlayingPosition)
-//                    }
                     songAdapter.notifyDataSetChanged()
-                    previousPlayingPosition = holder.bindingAdapterPosition
-                    previousHolder = holder
 
                 }
                 val param2 = song.isPlaying.toString()
@@ -166,15 +172,31 @@ class MainActivity : AppCompatActivity() {
                         songAdapter.notifyDataSetChanged()
                     }
                 })
-                //fragment.changePlayPauseButtonIcon()
                 // Add the Fragment to the container
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container_view, fragment)
                     .commit()
             }
         })
+    }
 
-        val searchView = findViewById<SearchView>(R.id.searchSong)
+    private fun showBottomLayout() {
+        if(!setBottomHeight)
+        {
+            val dpHeight = 70 // height in dp
+            val density = resources.displayMetrics.density
+            val heightInPx = (dpHeight * density).toInt()
+
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                heightInPx
+            )
+            findViewById<LinearLayout>(R.id.bottomLinearLayout).layoutParams = params
+        }
+    }
+
+    private fun initializeSearchViewOnActionListener(searchView: SearchView)
+    {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 TODO("Not yet implemented")
@@ -183,37 +205,15 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextChange(query: String): Boolean {
                 if (query != "") {
                     songViewModel.filterSongs(query)
-                    println(songViewModel.items.value!!.size)
                     songAdapter.notifyDataSetChanged()
                 } else {
                     songViewModel.setDefaultSongs()
                     songAdapter.notifyDataSetChanged()
-                    println("tutaj sa wszystkie z play " + songViewModel.items.value!!.filter {
-                        it.isPlaying == AudioState.PLAY
-                    })
                 }
                 return true
             }
 
         })
-
-
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == requestCodeReadMemory) {
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                permissionGranted = true
-            } else {
-                Toast.makeText(this, "Odmowa uprawnien", Toast.LENGTH_SHORT).show()
-                permissionGranted = false
-            }
-        }
     }
 
 }
