@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">MusicPlayer</string>
     <string name="headerTitle">K7 Music Player</string>
+    <string name="currently_playing">Currently playing:</string>
 </resources>

@@ -62,8 +62,8 @@ class PlayingManagerFragment : Fragment() {
         buttonPlayPause = playingManagerView.findViewById(R.id.btnPlayPauseFragment)
 
         when(audioState) {
-            AudioState.PLAY.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_play_btn))
-            AudioState.PAUSE.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_pause_btn))
+            AudioState.PLAY.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_pause_btn))
+            AudioState.PAUSE.toString() -> buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(),R.drawable.ic_play_btn))
         }
 
         buttonPlayPause.setOnClickListener {
@@ -101,10 +101,10 @@ class PlayingManagerFragment : Fragment() {
     fun changePlayPauseButtonIcon(audioState: AudioState) {
        when(audioState){
            AudioState.PLAY -> {
-               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_btn))
+               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause_btn))
            }
            AudioState.PAUSE -> {
-               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause_btn))
+               buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_btn))
            }
            else -> println("ERR!")
        }

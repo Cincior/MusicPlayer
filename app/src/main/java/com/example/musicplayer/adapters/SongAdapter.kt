@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.R
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
+import pl.droidsonroids.gif.GifDrawable
 
 class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<SongAdapter.ItemViewHolder>()
 {
@@ -42,6 +43,8 @@ class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<Son
         holder.durationTextView.text = item.duration
         holder.artistTextView.text = item.artist
 
+        val gif = holder.playingImage.drawable as GifDrawable
+
         when(item.isPlaying) {
             AudioState.NONE -> {
                 holder.playingImage.visibility = View.INVISIBLE
@@ -49,12 +52,12 @@ class SongAdapter(private var items: ArrayList<Song>) : RecyclerView.Adapter<Son
             }
             AudioState.PLAY -> {
                 holder.playingImage.visibility = View.VISIBLE
-                holder.playingImage.setImageResource(R.drawable.ic_play)
+                gif.start()
                 holder.titleTextView.setTextColor(ContextCompat.getColor(holder.titleTextView.context, R.color.skyBlue))
             }
             AudioState.PAUSE -> {
                 holder.playingImage.visibility = View.VISIBLE
-                holder.playingImage.setImageResource(R.drawable.ic_pause)
+                gif.pause()
                 holder.titleTextView.setTextColor(ContextCompat.getColor(holder.titleTextView.context, R.color.white))
             }
         }
