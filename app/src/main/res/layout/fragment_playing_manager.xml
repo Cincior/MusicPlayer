@@ -49,7 +49,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/transparent"
-            android:src="@drawable/ic_play_btn"/>
+            android:src="@drawable/ic_pause_btn"/>
     </LinearLayout>
 
 </FrameLayout>

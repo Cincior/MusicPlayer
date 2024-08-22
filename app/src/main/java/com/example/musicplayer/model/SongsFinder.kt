@@ -2,6 +2,7 @@ package com.example.musicplayer.model
 
 import android.app.Application
 import android.content.ContentUris
+import android.database.Cursor
 import android.provider.MediaStore
 import java.util.Locale
 import kotlin.math.ceil
@@ -24,7 +25,8 @@ class SongsFinder(private val application: Application) {
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATA,
-            MediaStore.Audio.Media.ARTIST
+            MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM_ID
         )
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
         val selectionArgs = arrayOf("%Download%") //DIRECTORY
@@ -41,6 +43,7 @@ class SongsFinder(private val application: Application) {
             val titleCol = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
             val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
             val artistCol = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
+            val albumIdCol = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idCol)
@@ -51,6 +54,7 @@ class SongsFinder(private val application: Application) {
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
+                val albumId = cursor.getString(albumIdCol)
                 songs.add(
                     Song(
                         id,
@@ -58,6 +62,7 @@ class SongsFinder(private val application: Application) {
                         formatArtistName(artist),
                         formatMilliseconds(duration),
                         uri,
+                        albumId,
                         AudioState.NONE
                     )
                 )

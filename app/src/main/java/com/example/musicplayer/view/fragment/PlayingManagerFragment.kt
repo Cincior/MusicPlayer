@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.example.musicplayer.R
@@ -49,7 +50,6 @@ class PlayingManagerFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             audioState = it.getString(ARG_PARAM2)
         }
-        songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -58,7 +58,7 @@ class PlayingManagerFragment : Fragment() {
     ): View? {
         val playingManagerView =
             inflater.inflate(R.layout.fragment_playing_manager, container, false)
-
+        songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         songViewModel.items.observe(viewLifecycleOwner) { songs ->
             changeFragmentLayout(songs)
         }
@@ -72,6 +72,7 @@ class PlayingManagerFragment : Fragment() {
         titleSection = playingManagerView.findViewById(R.id.titleSectionFragment)
         titleSection.setOnClickListener {
             val playerActivityIntent = Intent(requireContext(), PlayerActivity::class.java)
+            playerActivityIntent.putExtra("xd", songViewModel.items.value!![1].image)
             startActivity(playerActivityIntent)
         }
 
@@ -81,31 +82,41 @@ class PlayingManagerFragment : Fragment() {
 
     private fun changeFragmentLayout(songs: ArrayList<Song>?) {
         songs?.find {
-            it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
+            it.isPlaying == AudioState.PLAY ||
+                    it.isPlaying == AudioState.PAUSE ||
+                    it.isPlaying == AudioState.END
         }.let {
-            textViewTitle.text = it?.title
-            when (it?.isPlaying) {
-                AudioState.PLAY -> {
-                    buttonPlayPause.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            requireContext(),
-                            R.drawable.ic_pause_btn
-                        )
-                    )
-                }
+            if (it == null) {
+                textViewTitle.text = "NO SONG"
+            } else {
+                println("in frag: " + it.isPlaying.toString())
 
-                AudioState.PAUSE -> {
-                    buttonPlayPause.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            requireContext(),
-                            R.drawable.ic_play_btn
+                when (it.isPlaying) {
+                    AudioState.PLAY -> {
+                        textViewTitle.text = it.title
+                        buttonPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                requireContext(),
+                                R.drawable.ic_pause_btn
+                            )
                         )
-                    )
-                }
+                    }
 
-                else -> TODO()
+                    AudioState.PAUSE, AudioState.END -> {
+                        textViewTitle.text = it.title
+                        buttonPlayPause.setImageDrawable(
+                            ContextCompat.getDrawable(
+                                requireContext(),
+                                R.drawable.ic_play_btn
+                            )
+                        )
+                    }
+
+                    else -> println("frag when: " + it.isPlaying.toString())
+                }
             }
         }
+
     }
 
 
@@ -127,32 +138,6 @@ class PlayingManagerFragment : Fragment() {
                     putString(ARG_PARAM2, param2)
                 }
             }
-    }
-
-    fun changePlayPauseButtonIcon(audioState: AudioState) {
-        when (audioState) {
-            AudioState.PLAY -> {
-                buttonPlayPause.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
-                        R.drawable.ic_pause_btn
-                    )
-                )
-            }
-
-            AudioState.PAUSE -> {
-                buttonPlayPause.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        requireContext(),
-                        R.drawable.ic_play_btn
-                    )
-                )
-            }
-
-            else -> println("ERR!")
-        }
-
-
     }
 
     fun setActionListener(listener: IonActionListener) {

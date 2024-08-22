@@ -10,12 +10,12 @@ import com.example.musicplayer.model.SongsFinder
 
 class SongViewModel(private val application: Application) : AndroidViewModel(application) {
 
-    private lateinit var allItemsWithPreviousState: ArrayList<Song>
-    private val _items = MutableLiveData<ArrayList<Song>>()
+    private var _items = MutableLiveData<ArrayList<Song>>()
     val items: LiveData<ArrayList<Song>> get() = _items
 
-    init {
-        //getSongs()
+
+    private fun updateSongs(newSongs: ArrayList<Song>) {
+        _items.value = newSongs
     }
 
     /**
@@ -23,31 +23,31 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
      */
     fun getSongs() {
         val sf = SongsFinder(application)
-        val sfO = SongsFinder(application)
         val songList = sf.getSongsFromDownload()
-        val songListOriginal = sfO.getSongsFromDownload()
         _items.value = songList
-        allItemsWithPreviousState = songListOriginal
     }
+    fun getSongsUpdate() {
+        val sf = SongsFinder(application)
+        val songList = sf.getSongsFromDownload()
 
-    private fun updateSongs(newSongs: ArrayList<Song>) {
-        _items.value = newSongs
-    }
+        //save previous state before insertion
+        val previousSong = getSongWithChangedPlayingState()
 
-    private fun updateAllSongs(changedSong: Song) {
-        allItemsWithPreviousState.forEach {
-            it.isPlaying = AudioState.NONE
-        }
-        allItemsWithPreviousState.find {
-            it.id == changedSong.id
+        _items.value = songList
+
+        items.value?.find {
+            it.id == previousSong?.id
         }.let {
-            it?.isPlaying = changedSong.isPlaying
+            it?.isPlaying = previousSong?.isPlaying ?: AudioState.NONE
+            println("znalazlem: " + it)
         }
+
+        forceUpdate()
     }
 
-    fun setDefaultSongs()
-    {
-        updateSongs(allItemsWithPreviousState)
+    fun forceUpdate() {
+        val songs = items.value
+        updateSongs(songs!!)
     }
 
     fun deleteSong(id: Long) {
@@ -71,62 +71,21 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
         when (foundedSongState) {
             AudioState.PLAY -> foundedSong?.isPlaying = AudioState.PAUSE
             AudioState.PAUSE -> foundedSong?.isPlaying = AudioState.PLAY
-            AudioState.END -> foundedSong?.isPlaying = AudioState.NONE
+            //AudioState.END -> foundedSong?.isPlaying = AudioState.END
             else -> foundedSong?.isPlaying = AudioState.PLAY
         }
         if (currentSongs != null) {
             updateSongs(currentSongs)
-            if (foundedSong != null) {
-                updateAllSongs(foundedSong.copy())
-            }
         }
     }
 
-
-
-    fun filterSongs(query: String)
-    {
-        val allSongs = ArrayList(allItemsWithPreviousState)
-        val filteredSongs = getFilteredSongs(query, allSongs)
-        updateSongs(filteredSongs)
-//        val currentSongs = _items.value
-//        var foundedSongState: AudioState? = null
-//        val foundedSongId: Long?
-//        val foundedSong = currentSongs?.find {
-//            it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
-//        }
-//        foundedSongState = foundedSong?.isPlaying
-//        foundedSongId = foundedSong?.id
-//        val filteredSongs = getFilteredSongs(query)
-//        filteredSongs.forEach {
-//            it.isPlaying = AudioState.NONE
-//        }
-//        if(foundedSong == null) {
-//            updateSongs(filteredSongs)
-//            return
-//        }
-//
-//        val songToChange = filteredSongs.find {
-//            it.id == foundedSongId
-//        }
-//        songToChange?.isPlaying = foundedSongState!!
-//        println("filtred z filterSong" +filteredSongs)
-//        println("wczesniejsze" +foundedSong)
-//        updateSongs(filteredSongs)
-
-    }
-
-    private fun getFilteredSongs(query: String, allSongs: ArrayList<Song>): ArrayList<Song> {
-        val filteredSongs = allSongs.filter {
-            it.title.startsWith(query, true)
-        }.let { ArrayList(it) }
-        println("PO FILTRZE" + filteredSongs)
-
-        return filteredSongs
+    fun getSongWithChangedPlayingState(): Song? {
+        return items.value?.find {
+            it.isPlaying != AudioState.NONE
+        }
     }
 
 }
-
 
 //class SongViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
 //    override fun <T : ViewModel> create(modelClass: Class<T>): T {
