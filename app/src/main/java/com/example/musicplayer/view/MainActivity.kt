@@ -1,14 +1,20 @@
 package com.example.musicplayer.view
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.SearchView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
@@ -29,6 +35,8 @@ import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.fragment.PlayingManagerFragment
 import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.search.SearchBar
 import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
@@ -43,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var songViewModel: SongViewModel
     private lateinit var songAdapter: SongAdapter
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest> // To ask user about deletion of song
+
+    private lateinit var searchView: SearchView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,9 +79,16 @@ class MainActivity : AppCompatActivity() {
 
         initializeSwipeRefreshLayout()
 
-        initializeSearchViewOnActionListener()
+        searchView = findViewById<SearchView>(R.id.searchSong)
+        initializeSearchViewOnActionListener(searchView)
 
         audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
+
+        findViewById<ExtendedFloatingActionButton>(R.id.btnFavourites).setOnClickListener{
+            val intent = Intent(this@MainActivity, FavouritesActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     private fun registerIntentSender() {
@@ -95,6 +112,11 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        searchView.clearFocus()
     }
 
     override fun onRequestPermissionsResult(
@@ -164,9 +186,7 @@ class MainActivity : AppCompatActivity() {
                         audioPlayerManager?.playSong(song)
                     }
                 }
-
-                println("song: " + song)
-                initializeFragment(song)
+                initializeFragment()
             }
         })
     }
@@ -186,7 +206,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initializeFragment(song: Song) {
+    private fun initializeFragment() {
 
         val fragment = PlayingManagerFragment.newInstance("", "")
         fragment.setActionListener(object : PlayingManagerFragment.IonActionListener {
@@ -205,12 +225,12 @@ class MainActivity : AppCompatActivity() {
         showBottomLayout()
     }
 
-    private fun initializeSearchViewOnActionListener()
+    private fun initializeSearchViewOnActionListener(searchView: SearchView)
     {
-        val searchView = findViewById<SearchView>(R.id.searchSong)
+        searchView.clearFocus()
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(p0: String?): Boolean {
-                onQueryTextChange(p0)
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                onQueryTextChange(query)
                 searchView.clearFocus()
                 return true
             }
@@ -220,7 +240,9 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
+
     }
+
 
 //    fun hideKeyboard() {
 //        val view = this.currentFocus
@@ -259,5 +281,6 @@ class MainActivity : AppCompatActivity() {
         snackbar.view.layoutParams = snackbarParams
         return snackbar
     }
+
 
 }

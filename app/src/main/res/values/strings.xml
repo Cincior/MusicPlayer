@@ -2,4 +2,6 @@
     <string name="app_name">MusicPlayer</string>
     <string name="headerTitle">K7 Music Player</string>
     <string name="currently_playing">Currently playing:</string>
+    <string name="favourites">Favourites</string>
+    <string name="your_playlists">Your playlists</string>
 </resources>
