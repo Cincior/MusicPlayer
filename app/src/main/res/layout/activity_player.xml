@@ -7,6 +7,60 @@
     android:layout_height="match_parent"
     tools:context=".view.PlayerActivity">
 
+    <LinearLayout
+        android:id="@+id/mainMusicPlayerSection"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/middleProgressBarSection"
+        app:layout_constraintHeight_percent="0.7">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="xdxd"
+            android:textSize="30sp"/>
+        <ImageView
+            android:id="@+id/albumThumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/middleProgressBarSection"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/mainMusicPlayerSection"
+        app:layout_constraintBottom_toTopOf="@id/bottomPlayerManagerSection"
+        app:layout_constraintHeight_percent="0.1">
+
+        <TextView
+            android:id="@+id/tst"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="xdxd"
+            android:textSize="30sp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomPlayerManagerSection"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/middleProgressBarSection"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="xdxd"
+            android:textSize="30sp"/>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

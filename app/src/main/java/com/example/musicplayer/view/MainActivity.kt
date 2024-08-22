@@ -1,19 +1,25 @@
 package com.example.musicplayer.view
 
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.Gravity
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
@@ -23,6 +29,7 @@ import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.fragment.PlayingManagerFragment
 import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -33,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private var setBottomHeight = false
     private var audioPlayerManager: AudioPlayerManager? = null
 
-    private val songViewModel: SongViewModel by viewModels()
+    private lateinit var songViewModel: SongViewModel
     private lateinit var songAdapter: SongAdapter
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest> // To ask user about deletion of song
 
@@ -48,26 +55,23 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-
         registerIntentSender()
 
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
+        songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
         songViewModel.getSongs()
+
         songAdapter = SongAdapter(songViewModel.items.value!!)
+        initializeAdapterOnClickFunctions(songAdapter)
         recyclerView.adapter = songAdapter
 
-        songViewModel.items.observe(this) { songs ->
-            songAdapter.updateSongs(songs)
-        }
-        initializeAdapterOnClickFunctions(songAdapter)
+        initializeSwipeRefreshLayout()
 
-        val searchView = findViewById<SearchView>(R.id.searchSong)
-        initializeSearchViewOnActionListener(searchView)
+        initializeSearchViewOnActionListener()
 
         audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
-
     }
 
     private fun registerIntentSender() {
@@ -76,8 +80,10 @@ class MainActivity : AppCompatActivity() {
             if (it.resultCode == RESULT_OK) {
                 if (deletionId != -1) {
                     songViewModel.deleteSong(deletionId.toLong())
-                    songAdapter.notifyItemRangeChanged(listId, songViewModel.items.value!!.size)
-                    songAdapter.notifyItemRemoved(listId)
+                    if (songViewModel.getSongWithChangedPlayingState()?.id == deletionId.toLong()) {
+                        audioPlayerManager?.destroyPlayer()
+                    }
+                    songAdapter.updateAfterDeletion(listId, songViewModel.items.value!!.size, deletionId.toLong())
                     deletionId = -1
                     listId = -1
                 }
@@ -120,15 +126,25 @@ class MainActivity : AppCompatActivity() {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
                 builder
                     .setTitle(song.title)
-                    .setItems(arrayOf("Delete", "Cancel")) { _, which ->
-                        if (which == 0) {
-                            val deleteRequest =
-                                MediaStore.createDeleteRequest(contentResolver, listOf(song.uri))
-                            intentSenderLauncher.launch(
-                                IntentSenderRequest.Builder(deleteRequest).build()
-                            )
-                            deletionId = song.id.toInt()
-                            listId = position
+                    .setItems(arrayOf("Delete", "Add to favourites", "Cancel")) { _, which ->
+                        when(which) {
+                            0 -> {
+                                val deleteRequest = MediaStore.createDeleteRequest(
+                                    contentResolver,
+                                    listOf(song.uri)
+                                )
+                                intentSenderLauncher.launch(
+                                    IntentSenderRequest.Builder(deleteRequest).build()
+                                )
+                                deletionId = song.id.toInt()
+                                listId = position
+                            }
+                            1 -> {
+                                Toast.makeText(this@MainActivity, "Added to favourites (not yet implemented)", Toast.LENGTH_SHORT).show()
+                            }
+                            else -> {
+
+                            }
                         }
                     }
                 val dialog: AlertDialog = builder.create()
@@ -141,8 +157,6 @@ class MainActivity : AppCompatActivity() {
              * @param song clicked Song object
              */
             override fun onClick(holder: ItemViewHolder, song: Song) {
-                showBottomLayout()
-
                 when (song.isPlaying) {
                     AudioState.PLAY -> audioPlayerManager?.pauseSong(song, holder)
                     AudioState.PAUSE -> audioPlayerManager?.resumeSong(song, holder)
@@ -151,19 +165,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                val fragment = PlayingManagerFragment.newInstance(song.title, song.isPlaying.toString())
-                fragment.setActionListener(object : PlayingManagerFragment.IonActionListener {
-                    override fun onButtonPlayPauseClicked() {
-                        when (song.isPlaying) {
-                            AudioState.PLAY -> audioPlayerManager?.pauseSongFragment(song)
-                            AudioState.PAUSE -> audioPlayerManager?.resumeSongFragment(song)
-                            else -> audioPlayerManager?.playSong(song)
-                        }
-                    }
-                })
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_view, fragment)
-                    .commit()
+                println("song: " + song)
+                initializeFragment(song)
             }
         })
     }
@@ -183,23 +186,78 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initializeSearchViewOnActionListener(searchView: SearchView)
+    private fun initializeFragment(song: Song) {
+
+        val fragment = PlayingManagerFragment.newInstance("", "")
+        fragment.setActionListener(object : PlayingManagerFragment.IonActionListener {
+            override fun onButtonPlayPauseClicked() {
+                val currentSong = songViewModel.getSongWithChangedPlayingState()
+                when (currentSong?.isPlaying) {
+                    AudioState.PLAY -> audioPlayerManager?.pauseSongFragment(currentSong)
+                    AudioState.PAUSE -> audioPlayerManager?.resumeSongFragment(currentSong)
+                    else -> audioPlayerManager?.playSong(currentSong!!)
+                }
+            }
+        })
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container_view, fragment)
+            .commit()
+        showBottomLayout()
+    }
+
+    private fun initializeSearchViewOnActionListener()
     {
+        val searchView = findViewById<SearchView>(R.id.searchSong)
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(p0: String?): Boolean {
                 onQueryTextChange(p0)
+                searchView.clearFocus()
                 return true
             }
             override fun onQueryTextChange(query: String?): Boolean {
-                if (query != null && query != "") {
-                    songViewModel.filterSongs(query)
-                    songAdapter.notifyDataSetChanged()
-                } else {
-                    songViewModel.setDefaultSongs()
-                    songAdapter.notifyDataSetChanged()
-                }
+                val safeQuery = query ?: ""
+                songAdapter.filterSongs(safeQuery)
                 return true
             }
         })
     }
+
+//    fun hideKeyboard() {
+//        val view = this.currentFocus
+//        if (view != null) {
+//            val imm = getSystemService(this@MainActivity.INPUT_METHOD_SERVICE) as InputMethodManager
+//            imm.hideSoftInputFromWindow(view.windowToken, 0)
+//        }
+//    }
+
+    private fun initializeSwipeRefreshLayout() {
+        val swipeRefreshLayout: SwipeRefreshLayout = findViewById(R.id.swipeRecyclerViewLayout)
+        swipeRefreshLayout.setOnRefreshListener {
+            val existingQuery: String = findViewById<SearchView>(R.id.searchSong).query.toString()
+
+            songViewModel.getSongsUpdate()
+            songAdapter.insertNewItems(songViewModel.items.value!!)
+            if (existingQuery.isNotEmpty()) {
+                songAdapter.filterSongs(existingQuery)
+            }
+
+            songAdapter.notifyDataSetChanged()
+            swipeRefreshLayout.isRefreshing = false;
+            val snackbar = createSnackBar()
+            snackbar.show()
+
+        }
+    }
+
+    private fun createSnackBar(): Snackbar {
+        val snackbar = Snackbar.make(this, findViewById(R.id.fragment_container_view), "Refresh completed!", Snackbar.LENGTH_SHORT)
+        snackbar.setAction("OK") {
+            snackbar.dismiss()
+        }
+        val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
+        snackbarParams.gravity = Gravity.TOP
+        snackbar.view.layoutParams = snackbarParams
+        return snackbar
+    }
+
 }

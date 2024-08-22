@@ -8,6 +8,7 @@ data class Song(
     val artist: String,
     val duration: String,
     val uri: Uri,
+    var image: String,
     var isPlaying: AudioState
 )
 
