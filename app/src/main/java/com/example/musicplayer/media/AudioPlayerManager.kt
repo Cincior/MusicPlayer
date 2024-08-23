@@ -14,9 +14,10 @@ class AudioPlayerManager(
 ) {
     private var audioPlayer: AudioPlayer? = null
 
+
     fun playSong(song: Song) {
         audioPlayer?.stopSong()
-        audioPlayer = AudioPlayer(context, song.uri)
+        audioPlayer = AudioPlayer(context, song.uri, songViewModel.repeat.value ?: false)
         audioPlayer?.setOnCompletionListener {
             val currentSong = songViewModel.items.value?.find {
                 it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
@@ -24,6 +25,7 @@ class AudioPlayerManager(
             currentSong?.isPlaying = AudioState.END
             songViewModel.forceUpdate()
             songAdapter.notifyDataSetChanged()
+
 
         }
         audioPlayer?.playSong()
@@ -53,6 +55,10 @@ class AudioPlayerManager(
         audioPlayer?.resumeSong()
         songViewModel.updatePlayingState(song)
         songAdapter.notifyDataSetChanged()
+    }
+
+    fun changeIsLooping(isEnabled: Boolean) {
+        audioPlayer?.setLooping(isEnabled)
     }
 
     fun destroyPlayer()

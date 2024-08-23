@@ -17,6 +17,7 @@ import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.PlayerActivity
 import com.example.musicplayer.viewmodel.SongViewModel
+import com.example.musicplayer.viewmodel.ViewModelSingleton
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -34,7 +35,9 @@ class PlayingManagerFragment : Fragment() {
     private var param1: String? = null
     private var audioState: String? = null
 
-    private lateinit var songViewModel: SongViewModel
+    private val songViewModel: SongViewModel by lazy {
+        ViewModelSingleton.getSharedViewModel(requireActivity().application)
+    }
     private lateinit var textViewTitle: TextView
     private lateinit var buttonPlayPause: ImageButton
     private lateinit var titleSection: LinearLayout
@@ -58,7 +61,7 @@ class PlayingManagerFragment : Fragment() {
     ): View? {
         val playingManagerView =
             inflater.inflate(R.layout.fragment_playing_manager, container, false)
-        songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
+        //songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         songViewModel.items.observe(viewLifecycleOwner) { songs ->
             changeFragmentLayout(songs)
         }
@@ -72,7 +75,7 @@ class PlayingManagerFragment : Fragment() {
         titleSection = playingManagerView.findViewById(R.id.titleSectionFragment)
         titleSection.setOnClickListener {
             val playerActivityIntent = Intent(requireContext(), PlayerActivity::class.java)
-            playerActivityIntent.putExtra("xd", songViewModel.items.value!![1].image)
+            playerActivityIntent.putExtra("xd", songViewModel.items.value!![0].image)
             startActivity(playerActivityIntent)
         }
 

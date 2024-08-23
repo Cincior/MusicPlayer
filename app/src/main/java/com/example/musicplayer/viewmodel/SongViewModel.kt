@@ -8,10 +8,28 @@ import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.SongsFinder
 
+object ViewModelSingleton {
+    private var sharedViewModel: SongViewModel? = null
+
+    fun getSharedViewModel(application: Application): SongViewModel {
+        return sharedViewModel ?: synchronized(this) {
+            sharedViewModel ?: SongViewModel(application).also { sharedViewModel = it }
+        }
+    }
+}
+
+
 class SongViewModel(private val application: Application) : AndroidViewModel(application) {
 
     private var _items = MutableLiveData<ArrayList<Song>>()
     val items: LiveData<ArrayList<Song>> get() = _items
+
+    private val _repeat = MutableLiveData<Boolean>()
+    val repeat: LiveData<Boolean> get() = _repeat
+
+    init {
+        _repeat.value = false
+    }
 
 
     private fun updateSongs(newSongs: ArrayList<Song>) {
@@ -19,7 +37,7 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
     }
 
     /**
-     * Method assigns all founded songs to _items
+     * Method assigns all founded songs to _items while launching app
      */
     fun getSongs() {
         val sf = SongsFinder(application)
@@ -39,7 +57,6 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
             it.id == previousSong?.id
         }.let {
             it?.isPlaying = previousSong?.isPlaying ?: AudioState.NONE
-            println("znalazlem: " + it)
         }
 
         forceUpdate()
@@ -84,6 +101,11 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
             it.isPlaying != AudioState.NONE
         }
     }
+
+    fun setRepetition(r: Boolean) {
+        _repeat.value = r
+    }
+
 
 }
 
