@@ -28,6 +28,11 @@ fun getPermission(activity: MainActivity)
         {
             permissionGranted = true
         }
+        ActivityCompat.requestPermissions(
+            activity,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            0
+        )
     }
     else
     {

@@ -34,11 +34,11 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
-    <ScrollView
+    <LinearLayout
         android:id="@+id/middleProgressBarSection"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@id/mainMusicPlayerSection"
         app:layout_constraintBottom_toTopOf="@id/bottomPlayerManagerSection"
         app:layout_constraintHeight_percent="0.1">
@@ -49,8 +49,18 @@
             android:layout_height="wrap_content"
             android:text="xdxd"
             android:textSize="30sp"/>
+        <Button
+            android:id="@+id/startS"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="startService"/>
+        <Button
+            android:id="@+id/stopS"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="stopService"/>
 
-    </ScrollView>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/bottomPlayerManagerSection"
