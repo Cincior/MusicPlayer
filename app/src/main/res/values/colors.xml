@@ -3,6 +3,7 @@
     <color name="moreDarkBlue">#080F21</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="gray">#B6B6B6</color>
     <color name="darkBlue">#091229</color>
     <color name="mediumBlue">#1F57A9</color>
     <color name="lightBlue">#18407E</color>
