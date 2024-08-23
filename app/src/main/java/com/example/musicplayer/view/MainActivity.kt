@@ -1,21 +1,12 @@
 package com.example.musicplayer.view
 
-import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.MediaStore
-import android.text.Editable
-import android.text.TextWatcher
-import android.util.Log
 import android.view.Gravity
-import android.view.View
-import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.SearchView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -24,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -39,7 +29,6 @@ import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
 import com.example.musicplayer.viewmodel.ViewModelSingleton
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-import com.google.android.material.search.SearchBar
 import com.google.android.material.snackbar.Snackbar
 
 
@@ -99,17 +88,18 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-//        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-//            override fun handleOnBackPressed() {
-//                Toast.makeText(this@MainActivity, "Press back again to exit", Toast.LENGTH_SHORT).show()
-//            }
-//        })
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                Toast.makeText(this@MainActivity, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                audioPlayerManager?.destroyPlayer()
+                finish()
+            }
+        })
     }
 
     override fun onDestroy() {
         Toast.makeText(this@MainActivity, "po robocie", Toast.LENGTH_SHORT).show()
         super.onDestroy()
-
     }
 
     private fun registerIntentSender() {

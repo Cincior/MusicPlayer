@@ -61,7 +61,6 @@ class PlayingManagerFragment : Fragment() {
     ): View? {
         val playingManagerView =
             inflater.inflate(R.layout.fragment_playing_manager, container, false)
-        //songViewModel = ViewModelProvider(requireActivity())[SongViewModel::class.java]
         songViewModel.items.observe(viewLifecycleOwner) { songs ->
             changeFragmentLayout(songs)
         }
@@ -75,7 +74,7 @@ class PlayingManagerFragment : Fragment() {
         titleSection = playingManagerView.findViewById(R.id.titleSectionFragment)
         titleSection.setOnClickListener {
             val playerActivityIntent = Intent(requireContext(), PlayerActivity::class.java)
-            playerActivityIntent.putExtra("xd", songViewModel.items.value!![0].image)
+            playerActivityIntent.putExtra("xd", songViewModel.items.value!![songViewModel.items.value!!.size - 3].image)
             startActivity(playerActivityIntent)
         }
 
