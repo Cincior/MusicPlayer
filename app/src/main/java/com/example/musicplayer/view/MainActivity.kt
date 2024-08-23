@@ -1,6 +1,7 @@
 package com.example.musicplayer.view
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -16,6 +17,7 @@ import android.widget.LinearLayout
 import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,9 +37,11 @@ import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.fragment.PlayingManagerFragment
 import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
+import com.example.musicplayer.viewmodel.ViewModelSingleton
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.search.SearchBar
 import com.google.android.material.snackbar.Snackbar
+
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -48,7 +52,9 @@ class MainActivity : AppCompatActivity() {
     private var setBottomHeight = false
     private var audioPlayerManager: AudioPlayerManager? = null
 
-    private lateinit var songViewModel: SongViewModel
+    private val songViewModel: SongViewModel by lazy {
+        ViewModelSingleton.getSharedViewModel(application)
+    }
     private lateinit var songAdapter: SongAdapter
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest> // To ask user about deletion of song
 
@@ -70,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.songList)
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
-        songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
+        //songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
         songViewModel.getSongs()
 
         songAdapter = SongAdapter(songViewModel.items.value!!)
@@ -79,15 +85,30 @@ class MainActivity : AppCompatActivity() {
 
         initializeSwipeRefreshLayout()
 
-        searchView = findViewById<SearchView>(R.id.searchSong)
+        searchView = findViewById(R.id.searchSong)
         initializeSearchViewOnActionListener(searchView)
 
         audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
+        songViewModel.repeat.observe(this) { state ->
+            audioPlayerManager!!.changeIsLooping(state)
+        }
 
         findViewById<ExtendedFloatingActionButton>(R.id.btnFavourites).setOnClickListener{
             val intent = Intent(this@MainActivity, FavouritesActivity::class.java)
             startActivity(intent)
         }
+
+
+//        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+//            override fun handleOnBackPressed() {
+//                Toast.makeText(this@MainActivity, "Press back again to exit", Toast.LENGTH_SHORT).show()
+//            }
+//        })
+    }
+
+    override fun onDestroy() {
+        Toast.makeText(this@MainActivity, "po robocie", Toast.LENGTH_SHORT).show()
+        super.onDestroy()
 
     }
 
@@ -117,7 +138,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         searchView.clearFocus()
+        Toast.makeText(this@MainActivity, "resume", Toast.LENGTH_SHORT).show()
+        val s = songViewModel.items.value?.find {
+            it.isPlaying == AudioState.PLAY
+        }
+        println("resume: " + s)
     }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

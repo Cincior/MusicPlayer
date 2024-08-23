@@ -17,6 +17,7 @@
         app:layout_constraintHeight_percent="0.7">
 
         <TextView
+            android:id="@+id/head"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="xdxd"
@@ -60,6 +61,13 @@
             android:layout_height="wrap_content"
             android:text="xdxd"
             android:textSize="30sp"/>
+        <ImageButton
+            android:id="@+id/btnRepeat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/transparent"
+            android:src="@drawable/ic_repeat"/>
+
 
     </LinearLayout>
 

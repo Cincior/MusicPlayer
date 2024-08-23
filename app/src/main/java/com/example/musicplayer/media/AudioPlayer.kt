@@ -3,8 +3,9 @@ package com.example.musicplayer.media
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import android.widget.Toast
 
-class AudioPlayer(private val context: Context, private val uri: Uri) {
+class AudioPlayer(private val context: Context, private val uri: Uri, private val isLoopEndabled: Boolean) {
     private var mediaPlayer: MediaPlayer? = null
     private var onCompletionListener: (() -> Unit)? = null
 
@@ -16,6 +17,7 @@ class AudioPlayer(private val context: Context, private val uri: Uri) {
             setOnCompletionListener {
                 onCompletionListener?.invoke()
             }
+            isLooping = isLoopEndabled
         }
     }
 
@@ -33,8 +35,14 @@ class AudioPlayer(private val context: Context, private val uri: Uri) {
         mediaPlayer?.start()
     }
 
+    fun setLooping(isEnabled: Boolean) {
+        mediaPlayer?.isLooping = isEnabled
+        Toast.makeText(context, mediaPlayer?.isLooping.toString(), Toast.LENGTH_SHORT).show()
+    }
+
     fun setOnCompletionListener(listener: () -> Unit) {
         this.onCompletionListener = listener
     }
+
 
 }
