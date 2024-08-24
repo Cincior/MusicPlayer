@@ -53,6 +53,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(R.layout.activity_main)
+        Toast.makeText(this, "OnCreate", Toast.LENGTH_SHORT).show()
+
+        println("czy jakas gra: " + songViewModel.getSongWithChangedPlayingState() + " - " + audioPlayerManager)
+        audioPlayerManager?.destroyPlayer()
 
         // GET PERMISSIONS FIRST
         getPermission(this)
@@ -66,7 +70,9 @@ class MainActivity : AppCompatActivity() {
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         //songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
-        songViewModel.getSongs()
+        if (songViewModel.items.value.isNullOrEmpty()) {
+            songViewModel.getSongs()
+        }
 
         songAdapter = SongAdapter(songViewModel.items.value!!)
         initializeAdapterOnClickFunctions(songAdapter)
@@ -77,7 +83,10 @@ class MainActivity : AppCompatActivity() {
         searchView = findViewById(R.id.searchSong)
         initializeSearchViewOnActionListener(searchView)
 
-        audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
+        if (audioPlayerManager == null) {
+            audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
+        }
+
         songViewModel.repeat.observe(this) { state ->
             audioPlayerManager!!.changeIsLooping(state)
         }
@@ -88,13 +97,14 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                Toast.makeText(this@MainActivity, "Press back again to exit", Toast.LENGTH_SHORT).show()
-                audioPlayerManager?.destroyPlayer()
-                finish()
-            }
-        })
+//        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+//            override fun handleOnBackPressed() {
+//                Toast.makeText(this@MainActivity, "Press back again to exit", Toast.LENGTH_SHORT).show()
+//                audioPlayerManager?.destroyPlayer()
+//                finish()
+//            }
+//        })
+
     }
 
     override fun onDestroy() {

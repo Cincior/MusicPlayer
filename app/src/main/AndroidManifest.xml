@@ -43,7 +43,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".media.SongService" android:foregroundServiceType="mediaPlayback"/>
+        <service android:name=".media.MusicPlayerService" android:foregroundServiceType="mediaPlayback"/>
     </application>
 
 </manifest>
