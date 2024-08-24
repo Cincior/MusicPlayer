@@ -1,20 +1,16 @@
 package com.example.musicplayer.view
 
-import android.content.ContentUris
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Size
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.bumptech.glide.Glide
 import com.example.musicplayer.R
-import com.example.musicplayer.media.SongService
+import com.example.musicplayer.media.MusicPlayerService
 import com.example.musicplayer.viewmodel.SongViewModel
 import com.example.musicplayer.viewmodel.ViewModelSingleton
 import java.io.IOException
@@ -42,15 +38,16 @@ class PlayerActivity : AppCompatActivity() {
             findViewById<ImageView>(R.id.albumThumbnail).setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_action_name))
         }
         findViewById<Button>(R.id.startS).setOnClickListener{
-            Intent(applicationContext, SongService::class.java).also {
-                it.action = SongService.Actions.Start.toString()
+            Intent(applicationContext, MusicPlayerService::class.java).also {
+                it.putExtra("title", currentSong?.title)
+                it.action = MusicPlayerService.Actions.Start.toString()
                 startService(it)
             }
         }
 
         findViewById<Button>(R.id.stopS).setOnClickListener{
-            Intent(applicationContext, SongService::class.java).also {
-                it.action = SongService.Actions.Stop.toString()
+            Intent(applicationContext, MusicPlayerService::class.java).also {
+                it.action = MusicPlayerService.Actions.Stop.toString()
                 startService(it)
             }
         }
