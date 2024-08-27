@@ -1,48 +1,55 @@
 package com.example.musicplayer.media
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.net.Uri
 import android.widget.Toast
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 
-class AudioPlayer(private val context: Context, private val uri: Uri, private val isLoopEndabled: Boolean) {
-    private var mediaPlayer: MediaPlayer? = null
-    private var onCompletionListener: (() -> Unit)? = null
+class AudioPlayer(private val context: Context) {
+    private var mediaExoPlayer = ExoPlayer.Builder(context).build()
 
-    fun playSong() {
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(context, uri)
-            prepare()
-            start()
-            setOnCompletionListener {
-                onCompletionListener?.invoke()
-            }
-            isLooping = isLoopEndabled
+    fun playSong(uri: Uri, isLoopEnabled: Boolean, onCompletionListener: (() -> Unit)? = null) {
+        if (mediaExoPlayer.isPlaying) {
+            mediaExoPlayer.stop()
+            //mediaExoPlayer.clearMediaItems()
         }
+        val mediaItem = MediaItem.fromUri(uri)
+        mediaExoPlayer.setMediaItem(mediaItem)
+        mediaExoPlayer.repeatMode = if (isLoopEnabled) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+        mediaExoPlayer.prepare()
+        mediaExoPlayer.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                super.onPlaybackStateChanged(playbackState)
+                if (ExoPlayer.STATE_ENDED == playbackState) {
+                    onCompletionListener?.invoke()
+                }
+            }
+        })
+        mediaExoPlayer.play()
     }
 
     fun stopSong() {
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
+        mediaExoPlayer.stop()
     }
 
     fun pauseSong() {
-        mediaPlayer?.pause()
+        mediaExoPlayer.pause()
     }
 
     fun resumeSong() {
-        mediaPlayer?.start()
+        mediaExoPlayer.play()
     }
 
     fun setLooping(isEnabled: Boolean) {
-        mediaPlayer?.isLooping = isEnabled
-        Toast.makeText(context, mediaPlayer?.isLooping.toString(), Toast.LENGTH_SHORT).show()
+        mediaExoPlayer.repeatMode = if (isEnabled) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+        Toast.makeText(context, mediaExoPlayer.repeatMode.toString(), Toast.LENGTH_SHORT).show()
     }
 
-    fun setOnCompletionListener(listener: () -> Unit) {
-        this.onCompletionListener = listener
+    fun destroyPlayer() {
+        mediaExoPlayer.stop()
+        mediaExoPlayer.clearMediaItems()
     }
-
 
 }
