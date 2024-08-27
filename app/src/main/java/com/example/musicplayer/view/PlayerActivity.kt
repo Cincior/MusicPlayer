@@ -37,20 +37,7 @@ class PlayerActivity : AppCompatActivity() {
         } catch (e: IOException) {
             findViewById<ImageView>(R.id.albumThumbnail).setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_action_name))
         }
-        findViewById<Button>(R.id.startS).setOnClickListener{
-            Intent(applicationContext, MusicPlayerService::class.java).also {
-                it.putExtra("title", currentSong?.title)
-                it.action = MusicPlayerService.Actions.Start.toString()
-                startService(it)
-            }
-        }
 
-        findViewById<Button>(R.id.stopS).setOnClickListener{
-            Intent(applicationContext, MusicPlayerService::class.java).also {
-                it.action = MusicPlayerService.Actions.Stop.toString()
-                startService(it)
-            }
-        }
 
         val buttonRepeat = findViewById<ImageButton>(R.id.btnRepeat)
         initializeButtonRepeat(buttonRepeat)

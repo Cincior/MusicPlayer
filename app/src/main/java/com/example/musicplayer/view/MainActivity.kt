@@ -1,8 +1,12 @@
 package com.example.musicplayer.view
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.IBinder
 import android.provider.MediaStore
 import android.view.Gravity
 import android.widget.LinearLayout
@@ -21,7 +25,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
-import com.example.musicplayer.media.AudioPlayerManager
+import com.example.musicplayer.media.MusicPlayerService
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.fragment.PlayingManagerFragment
@@ -36,10 +40,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         var permissionGranted = false
     }
+
     var deletionId = -1 // Id of particular Song that can be deleted
     var listId = -1 // Id of item in recyclerView that can be deleted
     private var setBottomHeight = false
-    private var audioPlayerManager: AudioPlayerManager? = null
+    //private var audioPlayerManager: AudioPlayerManager? = null
 
     private val songViewModel: SongViewModel by lazy {
         ViewModelSingleton.getSharedViewModel(application)
@@ -49,14 +54,38 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var searchView: SearchView
 
+    private var musicService: MusicPlayerService? = null
+    private var isBound = false
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as MusicPlayerService.MusicServiceBinder
+            musicService = binder.getService()
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            isBound = false
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //unbindService(connection)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(R.layout.activity_main)
         Toast.makeText(this, "OnCreate", Toast.LENGTH_SHORT).show()
-
-        println("czy jakas gra: " + songViewModel.getSongWithChangedPlayingState() + " - " + audioPlayerManager)
-        audioPlayerManager?.destroyPlayer()
+        val intent = Intent(this, MusicPlayerService::class.java)
+        bindService(intent, connection, Context.BIND_AUTO_CREATE)
 
         // GET PERMISSIONS FIRST
         getPermission(this)
@@ -83,17 +112,14 @@ class MainActivity : AppCompatActivity() {
         searchView = findViewById(R.id.searchSong)
         initializeSearchViewOnActionListener(searchView)
 
-        if (audioPlayerManager == null) {
-            audioPlayerManager = AudioPlayerManager(this@MainActivity, songViewModel, songAdapter)
-        }
 
         songViewModel.repeat.observe(this) { state ->
-            audioPlayerManager!!.changeIsLooping(state)
+            musicService?.audioPlayer?.setLooping(state)
         }
 
-        findViewById<ExtendedFloatingActionButton>(R.id.btnFavourites).setOnClickListener{
-            val intent = Intent(this@MainActivity, FavouritesActivity::class.java)
-            startActivity(intent)
+        findViewById<ExtendedFloatingActionButton>(R.id.btnFavourites).setOnClickListener {
+            val intentOpenFavourites = Intent(this@MainActivity, FavouritesActivity::class.java)
+            startActivity(intentOpenFavourites)
         }
 
 
@@ -107,32 +133,32 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    override fun onDestroy() {
-        Toast.makeText(this@MainActivity, "po robocie", Toast.LENGTH_SHORT).show()
-        super.onDestroy()
-    }
-
     private fun registerIntentSender() {
         // Registering deletion
-        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-            if (it.resultCode == RESULT_OK) {
-                if (deletionId != -1) {
-                    songViewModel.deleteSong(deletionId.toLong())
-                    if (songViewModel.getSongWithChangedPlayingState()?.id == deletionId.toLong()) {
-                        audioPlayerManager?.destroyPlayer()
+        intentSenderLauncher =
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                if (it.resultCode == RESULT_OK) {
+                    if (deletionId != -1) {
+                        songViewModel.deleteSong(deletionId.toLong())
+                        if (songViewModel.getSongWithChangedPlayingState()?.id == deletionId.toLong()) {
+                            musicService?.audioPlayer?.destroyPlayer()
+                        }
+                        songAdapter.updateAfterDeletion(
+                            listId,
+                            songViewModel.items.value!!.size,
+                            deletionId.toLong()
+                        )
+                        deletionId = -1
+                        listId = -1
                     }
-                    songAdapter.updateAfterDeletion(listId, songViewModel.items.value!!.size, deletionId.toLong())
-                    deletionId = -1
-                    listId = -1
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Song couldn't be deleted",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            } else {
-                Toast.makeText(
-                    this@MainActivity,
-                    "Song couldn't be deleted",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
-        }
     }
 
     override fun onResume() {
@@ -162,8 +188,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initializeAdapterOnClickFunctions(songAdapter: SongAdapter)
-    {
+    private fun initializeAdapterOnClickFunctions(songAdapter: SongAdapter) {
         // Passing to adapter implemented functions of interface
         songAdapter.setOnClickListener(object : SongAdapter.IonClickListener {
             /**
@@ -176,7 +201,7 @@ class MainActivity : AppCompatActivity() {
                 builder
                     .setTitle(song.title)
                     .setItems(arrayOf("Delete", "Add to favourites", "Cancel")) { _, which ->
-                        when(which) {
+                        when (which) {
                             0 -> {
                                 val deleteRequest = MediaStore.createDeleteRequest(
                                     contentResolver,
@@ -188,9 +213,15 @@ class MainActivity : AppCompatActivity() {
                                 deletionId = song.id.toInt()
                                 listId = position
                             }
+
                             1 -> {
-                                Toast.makeText(this@MainActivity, "Added to favourites (not yet implemented)", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Added to favourites (not yet implemented)",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
+
                             else -> {
 
                             }
@@ -207,20 +238,45 @@ class MainActivity : AppCompatActivity() {
              */
             override fun onClick(holder: ItemViewHolder, song: Song) {
                 when (song.isPlaying) {
-                    AudioState.PLAY -> audioPlayerManager?.pauseSong(song, holder)
-                    AudioState.PAUSE -> audioPlayerManager?.resumeSong(song, holder)
+                    AudioState.PLAY -> {
+                        musicService?.audioPlayer?.pauseSong()
+                        songViewModel.updatePlayingState(song)
+                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+                    }
+
+                    AudioState.PAUSE -> {
+                        musicService?.audioPlayer?.resumeSong()
+                        songViewModel.updatePlayingState(song)
+                        songAdapter.notifyItemChanged(holder.bindingAdapterPosition)
+                    }
+
                     else -> {
-                        audioPlayerManager?.playSong(song)
+                        Intent(applicationContext, MusicPlayerService::class.java).also {
+                            it.putExtra("title", song.title)
+                            it.putExtra("uri", songViewModel.items.value!![0].uri.toString())
+                            it.action = MusicPlayerService.Actions.Start.toString()
+                            startService(it)
+                        }
+                        musicService?.audioPlayer?.playSong(song.uri, songViewModel.repeat.value ?: false) {
+                            val currentSong = songViewModel.items.value?.find {
+                                it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
+                            }
+                            currentSong?.isPlaying = AudioState.END
+                            songViewModel.forceUpdate()
+                            songAdapter.notifyDataSetChanged()
+                        }
+                        songViewModel.updatePlayingState(song)
+                        songAdapter.notifyDataSetChanged()
                     }
                 }
+                println("? " + musicService?.audioPlayer)
                 initializeFragment()
             }
         })
     }
 
     private fun showBottomLayout() {
-        if(!setBottomHeight)
-        {
+        if (!setBottomHeight) {
             val dpHeight = 70 // height in dp
             val density = resources.displayMetrics.density
             val heightInPx = (dpHeight * density).toInt()
@@ -240,9 +296,34 @@ class MainActivity : AppCompatActivity() {
             override fun onButtonPlayPauseClicked() {
                 val currentSong = songViewModel.getSongWithChangedPlayingState()
                 when (currentSong?.isPlaying) {
-                    AudioState.PLAY -> audioPlayerManager?.pauseSongFragment(currentSong)
-                    AudioState.PAUSE -> audioPlayerManager?.resumeSongFragment(currentSong)
-                    else -> audioPlayerManager?.playSong(currentSong!!)
+                    AudioState.PLAY -> {
+                        musicService?.audioPlayer?.pauseSong()
+                        songViewModel.updatePlayingState(currentSong)
+                        songAdapter.notifyDataSetChanged()
+                    }
+                    AudioState.PAUSE -> {
+                        musicService?.audioPlayer?.resumeSong()
+                        songViewModel.updatePlayingState(currentSong)
+                        songAdapter.notifyDataSetChanged()
+                    }
+                    else -> {
+                        Intent(applicationContext, MusicPlayerService::class.java).also {
+                            it.putExtra("title", currentSong?.title)
+                            it.putExtra("uri", songViewModel.items.value!![0].uri.toString())
+                            it.action = MusicPlayerService.Actions.Start.toString()
+                            startService(it)
+                        }
+                        musicService?.audioPlayer?.playSong(currentSong?.uri!!, songViewModel.repeat.value ?: false) {
+                            val currentSong = songViewModel.items.value?.find {
+                                it.isPlaying == AudioState.PLAY || it.isPlaying == AudioState.PAUSE
+                            }
+                            currentSong?.isPlaying = AudioState.END
+                            songViewModel.forceUpdate()
+                            songAdapter.notifyDataSetChanged()
+                        }
+                        songViewModel.updatePlayingState(currentSong!!)
+                        songAdapter.notifyDataSetChanged()
+                    }
                 }
             }
         })
@@ -252,8 +333,7 @@ class MainActivity : AppCompatActivity() {
         showBottomLayout()
     }
 
-    private fun initializeSearchViewOnActionListener(searchView: SearchView)
-    {
+    private fun initializeSearchViewOnActionListener(searchView: SearchView) {
         searchView.clearFocus()
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -261,6 +341,7 @@ class MainActivity : AppCompatActivity() {
                 searchView.clearFocus()
                 return true
             }
+
             override fun onQueryTextChange(query: String?): Boolean {
                 val safeQuery = query ?: ""
                 songAdapter.filterSongs(safeQuery)
@@ -299,7 +380,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createSnackBar(): Snackbar {
-        val snackbar = Snackbar.make(this, findViewById(R.id.fragment_container_view), "Refresh completed!", Snackbar.LENGTH_SHORT)
+        val snackbar = Snackbar.make(
+            this,
+            findViewById(R.id.fragment_container_view),
+            "Refresh completed!",
+            Snackbar.LENGTH_SHORT
+        )
         snackbar.setAction("OK") {
             snackbar.dismiss()
         }
