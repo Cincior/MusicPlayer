@@ -74,7 +74,6 @@ class PlayingManagerFragment : Fragment() {
         titleSection = playingManagerView.findViewById(R.id.titleSectionFragment)
         titleSection.setOnClickListener {
             val playerActivityIntent = Intent(requireContext(), PlayerActivity::class.java)
-            playerActivityIntent.putExtra("xd", songViewModel.items.value!![songViewModel.items.value!!.size - 3].image)
             startActivity(playerActivityIntent)
         }
 

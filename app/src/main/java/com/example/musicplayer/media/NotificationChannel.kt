@@ -11,7 +11,7 @@ class NotificationChannel: Application() {
         val channel = NotificationChannel(
             "music-player-channel",
             "Music notifications",
-            NotificationManager.IMPORTANCE_LOW
+            NotificationManager.IMPORTANCE_DEFAULT
         )
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)

@@ -52,4 +52,16 @@ class AudioPlayer(private val context: Context) {
         mediaExoPlayer.clearMediaItems()
     }
 
+    fun getCurrentPlaybackPosition(): Long {
+        return mediaExoPlayer.currentPosition
+    }
+
+    fun isStillPlaying(): Boolean {
+        return mediaExoPlayer.isPlaying
+    }
+
+    fun setCurrentPosition(millis: Long) {
+        mediaExoPlayer.seekTo(millis)
+    }
+
 }

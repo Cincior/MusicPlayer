@@ -57,15 +57,16 @@ class MusicPlayerService : Service() {
             .setContentInfo("desc")
             .setContentText("")
             .setContentIntent(pendingIntent)
-            .setOngoing(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOngoing(true)
             .build()
         startForeground(1, notification)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
+        stopSelf()
         super.onTaskRemoved(rootIntent)
-        Toast.makeText(this, "ty wyjebane", Toast.LENGTH_SHORT).show()
+        audioPlayer?.destroyPlayer()
     }
 
     enum class Actions {
