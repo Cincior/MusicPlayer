@@ -24,6 +24,9 @@ class SongViewModel(private val application: Application) : AndroidViewModel(app
     private var _items = MutableLiveData<ArrayList<Song>>()
     val items: LiveData<ArrayList<Song>> get() = _items
 
+    private var _currentSong = MutableLiveData<Song>()
+    val currentSong: LiveData<Song> get() = _currentSong
+
     private val _repeat = MutableLiveData<Boolean>()
     val repeat: LiveData<Boolean> get() = _repeat
 

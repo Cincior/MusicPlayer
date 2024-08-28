@@ -71,12 +71,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        //unbindService(connection)
+        unbindService(connection)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,9 +98,7 @@ class MainActivity : AppCompatActivity() {
         (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
         //songViewModel = ViewModelProvider(this)[SongViewModel::class.java]
-        if (songViewModel.items.value.isNullOrEmpty()) {
-            songViewModel.getSongs()
-        }
+        songViewModel.getSongs()
 
         songAdapter = SongAdapter(songViewModel.items.value!!)
         initializeAdapterOnClickFunctions(songAdapter)
@@ -111,7 +108,6 @@ class MainActivity : AppCompatActivity() {
 
         searchView = findViewById(R.id.searchSong)
         initializeSearchViewOnActionListener(searchView)
-
 
         songViewModel.repeat.observe(this) { state ->
             musicService?.audioPlayer?.setLooping(state)
@@ -168,6 +164,11 @@ class MainActivity : AppCompatActivity() {
         val s = songViewModel.items.value?.find {
             it.isPlaying == AudioState.PLAY
         }
+        if (s != null) {
+            songAdapter.notifyDataSetChanged()
+            initializeFragment()
+        }
+
         println("resume: " + s)
     }
 

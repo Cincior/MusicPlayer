@@ -60,7 +60,7 @@ class SongsFinder(private val application: Application) {
                         id,
                         title,
                         formatArtistName(artist),
-                        formatMilliseconds(duration),
+                        duration,
                         uri,
                         albumId,
                         AudioState.NONE
@@ -70,19 +70,6 @@ class SongsFinder(private val application: Application) {
             }
         }
         return songs
-    }
-
-    /**
-     * Function allows to change milliseconds to minutes and seconds
-     * @param milliseconds song duration in milliseconds
-     * @return duration in format M.SS (e.g. 2.43)
-     */
-    private fun formatMilliseconds(milliseconds: Long): String {
-        val seconds = ceil(milliseconds / 1000.0)
-        val minutes = (seconds / 60).toInt()
-        val remainingSeconds = seconds % 60
-
-        return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
     }
 
     private fun formatArtistName(artist: String): String {

@@ -11,6 +11,8 @@ import com.example.musicplayer.R
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import pl.droidsonroids.gif.GifDrawable
+import java.util.Locale
+import kotlin.math.ceil
 
 class SongAdapter(private var items: ArrayList<Song>) :
     RecyclerView.Adapter<SongAdapter.ItemViewHolder>() {
@@ -38,7 +40,7 @@ class SongAdapter(private var items: ArrayList<Song>) :
 
         val item = items[position]
         holder.titleTextView.text = item.title
-        holder.durationTextView.text = item.duration
+        holder.durationTextView.text = formatMilliseconds(item.duration)
         holder.artistTextView.text = item.artist
 
         val gif = holder.playingImage.drawable as GifDrawable
@@ -122,6 +124,19 @@ class SongAdapter(private var items: ArrayList<Song>) :
     fun insertNewItems(newSongs: ArrayList<Song>) {
         items = newSongs
         defaultItems = newSongs
+    }
+
+    /**
+     * Function allows to change milliseconds to minutes and seconds
+     * @param milliseconds song duration in milliseconds
+     * @return duration in format M.SS (e.g. 2.43)
+     */
+    private fun formatMilliseconds(milliseconds: Long): String {
+        val seconds = ceil(milliseconds / 1000.0)
+        val minutes = (seconds / 60).toInt()
+        val remainingSeconds = seconds % 60
+
+        return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
     }
 }
 
