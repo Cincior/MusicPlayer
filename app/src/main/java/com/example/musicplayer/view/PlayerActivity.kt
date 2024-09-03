@@ -22,7 +22,7 @@ import com.example.musicplayer.media.MusicPlayerService
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.viewmodel.SongViewModel
-import com.example.musicplayer.viewmodel.ViewModelSingleton
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -36,9 +36,7 @@ import kotlin.math.ceil
 import kotlin.time.Duration
 
 class PlayerActivity : AppCompatActivity() {
-    private val songViewModel: SongViewModel by lazy {
-        ViewModelSingleton.getSharedViewModel(application)
-    }
+
 
     private var musicService: MusicPlayerService? = null
 
@@ -63,115 +61,115 @@ class PlayerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-        val serviceIntent = Intent(this, MusicPlayerService::class.java)
-        bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
-
-        val currentSong = songViewModel.getSongWithChangedPlayingState()
-        lifecycleScope.launch {
-            loadSongThumbnail(currentSong!!)
-        }
-
-        updateSeekBarJob = MainScope().launch {
-            updateProgressBar(seekBar, currentPositionTextView)
-        }
-
-        val titleTextView = findViewById<TextView>(R.id.songTitlePlayerActivity)
-        titleTextView.text = currentSong?.title ?: "title unknown"
-
-        seekBar = findViewById(R.id.seekBar)
-        seekBar.max = currentSong?.duration?.toInt()!!
-
-        currentPositionTextView = findViewById(R.id.currentPosition)
-
-        duration = findViewById(R.id.songDurationSeekBar)
-        duration.text = formatMilliseconds(currentSong.duration)
-
-        seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
-
-            }
-
-            override fun onStartTrackingTouch(s: SeekBar?) {
-                if(s?.progress == s?.max) {
-                    songViewModel.getSongWithChangedPlayingState()?.isPlaying = AudioState.PLAY
-                }
-            }
-
-            override fun onStopTrackingTouch(s: SeekBar?) {
-                musicService?.audioPlayer?.setCurrentPosition(s?.progress?.toLong()!!)
-                lifecycleScope.launch {
-                    updateProgressBar(seekBar, currentPositionTextView)
-                }
-            }
-
-        })
-
-
-        buttonRepeat = findViewById(R.id.btnRepeat)
-        initializeButtonRepeat(buttonRepeat)
+//        val serviceIntent = Intent(this, MusicPlayerService::class.java)
+//        bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+//
+//        val currentSong = songViewModel.getSongWithChangedPlayingState()
+//        lifecycleScope.launch {
+//            loadSongThumbnail(currentSong!!)
+//        }
+//
+//        updateSeekBarJob = MainScope().launch {
+//            updateProgressBar(seekBar, currentPositionTextView)
+//        }
+//
+//        val titleTextView = findViewById<TextView>(R.id.songTitlePlayerActivity)
+//        titleTextView.text = currentSong?.title ?: "title unknown"
+//
+//        seekBar = findViewById(R.id.seekBar)
+//        seekBar.max = currentSong?.duration?.toInt()!!
+//
+//        currentPositionTextView = findViewById(R.id.currentPosition)
+//
+//        duration = findViewById(R.id.songDurationSeekBar)
+//        duration.text = formatMilliseconds(currentSong.duration)
+//
+//        seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener {
+//            override fun onProgressChanged(s: SeekBar?, progress: Int, fromUser: Boolean) {
+//
+//            }
+//
+//            override fun onStartTrackingTouch(s: SeekBar?) {
+//                if(s?.progress == s?.max) {
+//                    //songViewModel.getSongWithChangedPlayingState()?.isPlaying = AudioState.PLAY
+//                }
+//            }
+//
+//            override fun onStopTrackingTouch(s: SeekBar?) {
+//                musicService?.audioPlayer?.setCurrentPosition(s?.progress?.toLong()!!)
+//                lifecycleScope.launch {
+//                    updateProgressBar(seekBar, currentPositionTextView)
+//                }
+//            }
+//
+//        })
+//
+//
+//        buttonRepeat = findViewById(R.id.btnRepeat)
+//        initializeButtonRepeat(buttonRepeat)
     }
 
 
-    private suspend fun loadSongThumbnail(currentSong: Song) {
-        withContext(Dispatchers.Main) {
-            try {
-                val thumbnail = currentSong.let {
-                    contentResolver.loadThumbnail(
-                        it.uri,
-                        Size(300,300),
-                        null
-                    )
-                }
-                findViewById<ImageView>(R.id.albumThumbnail).setImageBitmap(thumbnail)
-            } catch (e: IOException) {
-                findViewById<ImageView>(R.id.albumThumbnail).setImageDrawable(ContextCompat.getDrawable(this@PlayerActivity, R.drawable.ic_action_name))
-            }
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unbindService(connection)
-        updateSeekBarJob.cancel()
-    }
-
-    private fun initializeButtonRepeat(buttonRepeat: ImageButton) {
-        buttonRepeat.setOnClickListener{
-            if (songViewModel.repeat.value == true) {
-                songViewModel.setRepetition(false)
-                musicService?.audioPlayer?.setLooping(false)
-                buttonRepeat.setColorFilter(getColor(R.color.skyBlue))
-            } else {
-                songViewModel.setRepetition(true)
-                musicService?.audioPlayer?.setLooping(true)
-                buttonRepeat.setColorFilter(getColor(R.color.darkBlue))
-            }
-        }
-    }
-
-    private suspend fun updateProgressBar(seekBar: SeekBar, currentPositionTextView: TextView) {
-        withContext(Dispatchers.Main) {
-            while (seekBar.progress != seekBar.max) {
-                val currentPosition = musicService!!.audioPlayer?.getCurrentPlaybackPosition()
-                seekBar.progress = currentPosition!!.toInt()
-                currentPositionTextView.text = formatMilliseconds(currentPosition)
-                delay(15L)
-                //println("update")
-            }
-        }
-    }
-
-    /**
-     * Function allows to change milliseconds to minutes and seconds
-     * @param milliseconds song duration in milliseconds
-     * @return duration in format M.SS (e.g. 2.43)
-     */
-    private fun formatMilliseconds(milliseconds: Long): String {
-        val seconds = ceil(milliseconds / 1000.0)
-        val minutes = (seconds / 60).toInt()
-        val remainingSeconds = seconds % 60
-
-        return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
-    }
+//    private suspend fun loadSongThumbnail(currentSong: Song) {
+//        withContext(Dispatchers.Main) {
+//            try {
+//                val thumbnail = currentSong.let {
+//                    contentResolver.loadThumbnail(
+//                        it.uri,
+//                        Size(300,300),
+//                        null
+//                    )
+//                }
+//                findViewById<ImageView>(R.id.albumThumbnail).setImageBitmap(thumbnail)
+//            } catch (e: IOException) {
+//                findViewById<ImageView>(R.id.albumThumbnail).setImageDrawable(ContextCompat.getDrawable(this@PlayerActivity, R.drawable.ic_action_name))
+//            }
+//        }
+//    }
+//
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        unbindService(connection)
+//        updateSeekBarJob.cancel()
+//    }
+//
+//    private fun initializeButtonRepeat(buttonRepeat: ImageButton) {
+//        buttonRepeat.setOnClickListener{
+//            if (songViewModel.repeat.value == true) {
+//                songViewModel.setRepetition(false)
+//                musicService?.audioPlayer?.setLooping(false)
+//                buttonRepeat.setColorFilter(getColor(R.color.skyBlue))
+//            } else {
+//                songViewModel.setRepetition(true)
+//                musicService?.audioPlayer?.setLooping(true)
+//                buttonRepeat.setColorFilter(getColor(R.color.darkBlue))
+//            }
+//        }
+//    }
+//
+//    private suspend fun updateProgressBar(seekBar: SeekBar, currentPositionTextView: TextView) {
+//        withContext(Dispatchers.Main) {
+//            while (seekBar.progress != seekBar.max) {
+//                val currentPosition = musicService!!.audioPlayer?.getCurrentPlaybackPosition()
+//                seekBar.progress = currentPosition!!.toInt()
+//                currentPositionTextView.text = formatMilliseconds(currentPosition)
+//                delay(15L)
+//                //println("update")
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Function allows to change milliseconds to minutes and seconds
+//     * @param milliseconds song duration in milliseconds
+//     * @return duration in format M.SS (e.g. 2.43)
+//     */
+//    private fun formatMilliseconds(milliseconds: Long): String {
+//        val seconds = ceil(milliseconds / 1000.0)
+//        val minutes = (seconds / 60).toInt()
+//        val remainingSeconds = seconds % 60
+//
+//        return String.format(Locale.getDefault(), "%d:%02.0f", minutes, remainingSeconds)
+//    }
 
 }

@@ -56,7 +56,7 @@ class SongAdapter(private var items: ArrayList<Song>) :
                 )
             }
 
-            AudioState.PLAY -> {
+            AudioState.PLAY, AudioState.RESUME -> {
                 holder.playingImage.visibility = View.VISIBLE
                 gif.start()
                 holder.titleTextView.setTextColor(
@@ -93,7 +93,7 @@ class SongAdapter(private var items: ArrayList<Song>) :
 
     fun filterSongs(query: String = "") {
         items = if (query.isNotEmpty()) {
-            ArrayList(defaultItems.filter { it.title.startsWith(query, true) })
+            ArrayList(defaultItems.filter { it.title.contains(query, true) })
         } else {
             defaultItems
         }
