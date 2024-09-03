@@ -34,14 +34,15 @@ class MusicPlayerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val title = intent?.getStringExtra("title") ?: "song unknown"
+        val artist = intent?.getStringExtra("artist") ?: "artist unknown"
         when (intent?.action) {
-            Actions.Start.toString() -> start(title)
+            Actions.Start.toString() -> start(title, artist)
             Actions.Stop.toString() -> stopSelf()
         }
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun start(title: String) {
+    private fun start(title: String, artist: String) {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
         mainActivityIntent.putExtra("notificationService", true)
         mainActivityIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -57,7 +58,7 @@ class MusicPlayerService : Service() {
             .setSmallIcon(R.drawable.ic_action_name)
             .setContentTitle(title)
             .setContentInfo("desc")
-            .setContentText("")
+            .setContentText(artist)
             .setContentIntent(pendingIntent)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)

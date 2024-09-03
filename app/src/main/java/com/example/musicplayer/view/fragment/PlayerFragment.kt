@@ -103,7 +103,6 @@ class PlayerFragment : Fragment() {
         }
 
         songViewModel.currentSong.observe(viewLifecycleOwner) { cSong ->
-            println("observer: " + cSong.isPlaying)
             if (cSong.isPlaying in listOf(
                     AudioState.PLAY,
                     AudioState.RESUME

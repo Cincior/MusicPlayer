@@ -51,6 +51,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var titleSectionBottom: LinearLayout
     private lateinit var bottomPlayerManager: LinearLayout
 
+    private var actionToPlayer = R.id.action_homeFragment_to_playerFragment
+
+
     private var musicService: MusicPlayerService? = null
     private lateinit var navController: NavController
     private var isBound = false
@@ -111,7 +114,8 @@ class MainActivity : AppCompatActivity() {
 
         titleSectionBottom.setOnClickListener {
             if (songViewModel.currentSong.value != null) {
-                navController.navigate(R.id.action_homeFragment_to_playerFragment)
+                navController
+                navController.navigate(actionToPlayer)
             } else {
                 val x = createSnackBar("Choose your song first!")
                 x.show()
@@ -124,7 +128,12 @@ class MainActivity : AppCompatActivity() {
                 R.id.playerFragment -> {
                     bottomPlayerManager.visibility = View.GONE
                 }
-                else -> {
+                R.id.favouritesFragment -> {
+                    actionToPlayer = R.id.action_favouritesFragment_to_playerFragment
+                    bottomPlayerManager.visibility = View.VISIBLE
+                }
+                R.id.homeFragment -> {
+                    actionToPlayer = R.id.action_homeFragment_to_playerFragment
                     bottomPlayerManager.visibility = View.VISIBLE
                 }
             }
@@ -142,7 +151,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun changeBottomPlayer(song: Song) {
         textViewTitle.text = song.title
-        println("Zmiana: " + song.isPlaying)
         if (song.isPlaying == AudioState.PLAY || song.isPlaying == AudioState.RESUME) {
             buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_btn))
         } else {
@@ -169,7 +177,6 @@ class MainActivity : AppCompatActivity() {
     private fun manageSong(
         song: Song,
     ) {
-        println("wywoluje sie: " + songViewModel.currentSong.value?.isPlaying)
         when (song.isPlaying) {
             AudioState.PAUSE -> {
                 musicService?.audioPlayer?.pauseSong()
@@ -177,7 +184,7 @@ class MainActivity : AppCompatActivity() {
             AudioState.PLAY -> {
                 Intent(this, MusicPlayerService::class.java).also {
                     it.putExtra("title", song.title)
-                    it.putExtra("uri", songViewModel.items.value!![0].uri.toString())
+                    it.putExtra("artist", song.artist)
                     it.action = MusicPlayerService.Actions.Start.toString()
                     startService(it)
                 }
@@ -211,9 +218,4 @@ class MainActivity : AppCompatActivity() {
         snackbar.view.layoutParams = snackbarParams
         return snackbar
     }
-
-//    fun getMusicService(): MusicPlayerService {
-//        return musicService
-//    }
-
 }

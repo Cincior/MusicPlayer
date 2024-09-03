@@ -55,51 +55,6 @@ class SongViewModel() : ViewModel() {
             items.value?.add(0, it)
         }
 
-//        items.value?.find {
-//            it.id == previousSong?.id
-//        }.let {
-//            it?.isPlaying = previousSong?.isPlaying ?: AudioState.NONE
-//        }
-
-        //forceUpdate()
-
-        //fix after update
-//        val prevSong = items.value?.find {
-//            currentSong.value?.id == it.id
-//        }
-//        if (prevSong != null) {
-//            // Trigger observers
-//            _currentSong.value = items.value?.find {
-//                currentSong.value!!.id == it.id
-//            }
-//        }
-
-    }
-//    fun getSongsUpdate(context: Context) {
-//        val sf = SongsFinder(context)
-//        val songList = sf.getSongsFromDownload()
-//
-//        //save previous state before insertion
-//        val previousSong = currentSong.value?.copy()
-//        println("powoduje trigger prev: " + previousSong)
-//
-//        _items.value = songList
-//
-//        if(previousSong != null) {
-//            _currentSong.value = items.value?.find {
-//                it.id == previousSong.id
-//            }
-//            currentSong.value?.isPlaying = previousSong.isPlaying
-//        }
-//        println("powoduje trigger past: " + currentSong.value)
-//
-//
-//        forceUpdate()
-//    }
-
-    fun forceUpdate() {
-        val songs = items.value
-        updateSongs(songs!!)
     }
 
     fun deleteSong(id: Long) {
@@ -111,21 +66,8 @@ class SongViewModel() : ViewModel() {
         }
     }
 
-    fun updateAllSongs() {
-        val currentSongs = _items.value
-
-        currentSongs?.forEach {
-            it.isPlaying = AudioState.NONE
-        }
-
-        val s = currentSongs?.find {
-            it.id == currentSong.value?.id
-        }
-        s?.isPlaying = currentSong.value?.isPlaying!!
-
-        if (currentSongs != null) {
-            updateSongs(currentSongs)
-        }
+    fun toggleRepetition() {
+        _repeat.value = !_repeat.value!!
     }
 
     fun updateCurrentSongState(song: Song) {
@@ -150,22 +92,7 @@ class SongViewModel() : ViewModel() {
 
     }
 
-    fun getSongWithChangedPlayingState(): Song? {
-        return items.value?.find {
-            it.isPlaying != AudioState.NONE
-        }
-    }
-
-    fun setRepetition(r: Boolean) {
-        _repeat.value = r
-    }
-
-    fun toggleRepetition() {
-        _repeat.value = !_repeat.value!!
-    }
-
     fun changeCurrentSongState() {
-
         if (currentSong.value == null) {
             return
         }
@@ -179,10 +106,6 @@ class SongViewModel() : ViewModel() {
             else -> println("ERROR CHANGING STATE")
         }
         updateCurrentSong(currentSong.value!!)
-
-        println("tu " + currentSong.value)
-        println("tu " + items.value)
-
     }
 
     fun getSongsCount() = items.value?.size ?: 0
@@ -217,7 +140,6 @@ class SongViewModel() : ViewModel() {
                 }
             }
         }
-        println("czemu dziala: " + currentSong.value)
     }
 
 }
