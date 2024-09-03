@@ -64,6 +64,7 @@ class PlayerFragment : Fragment() {
     private lateinit var buttonPlayPause: ImageButton
     private lateinit var buttonPrevious: ImageButton
     private lateinit var buttonNext: ImageButton
+    private lateinit var buttonFavourite: ImageButton
 
     private lateinit var imageButtonAnimation: Animation
 
@@ -91,6 +92,7 @@ class PlayerFragment : Fragment() {
         buttonPlayPause = binding.btnPlayPausePlayerFragment
         buttonPrevious = binding.btnPreviousPlayerFragment
         buttonNext = binding.btnNextPlayerFragment
+        buttonFavourite = binding.btnAddToFavourites
 
         setSongData()
 
@@ -148,6 +150,14 @@ class PlayerFragment : Fragment() {
             songViewModel.setCurrentSongPrev()
             setSongData()
             it.startAnimation(imageButtonAnimation)
+        }
+
+        buttonFavourite.setOnClickListener {
+            //TODO(change that anim)
+            it.startAnimation(imageButtonAnimation)
+            lifecycleScope.launch {
+                songViewModel.favouritesRepository.addSongToFavourites(songViewModel.currentSong.value?.id.toString())
+            }
         }
 
     }

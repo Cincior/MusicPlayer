@@ -129,9 +129,12 @@
                 android:backgroundTint="@color/transparent"
                 android:src="@drawable/ic_next"
                 android:layout_weight="1"/>
-            <View
+            <ImageButton
+                android:id="@+id/btnAddToFavourites"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/transparent"
+                android:src="@drawable/ic_favouirte_btn"
                 android:layout_weight="1"/>
         </LinearLayout>
 

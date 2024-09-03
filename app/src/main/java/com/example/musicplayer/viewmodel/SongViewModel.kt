@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.model.SongsFinder
+import com.example.musicplayer.repository.FavouritesRepository
 
 
 class SongViewModel() : ViewModel() {
@@ -20,8 +21,11 @@ class SongViewModel() : ViewModel() {
     private val _repeat = MutableLiveData<Boolean>()
     val repeat: LiveData<Boolean> get() = _repeat
 
+    lateinit var favouritesRepository: FavouritesRepository
+
     init {
         _repeat.value = false
+
     }
 
 
@@ -50,11 +54,14 @@ class SongViewModel() : ViewModel() {
             song.id !in items.value!!.map { it.id }
         }
 
-        println("nowe znalezione: " + newSongs)
         newSongs.forEach {
             items.value?.add(0, it)
         }
 
+    }
+
+    fun initializeRepo(context: Context) {
+        favouritesRepository = FavouritesRepository(context)
     }
 
     fun deleteSong(id: Long) {
