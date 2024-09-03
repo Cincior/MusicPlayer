@@ -92,12 +92,15 @@ class HomeFragment : Fragment() {
         initializeSearchViewOnActionListener(searchView)
 
         songViewModel.currentSong.observe(viewLifecycleOwner) { song ->
-            println("Home fragment triggered")
             manageSong(song, songAdapter)
         }
 
         binding.btnPlaylists.setOnClickListener{
             //findNavController().navigate(R.id.action_homeFragment_to_playerFragment)
+        }
+
+        binding.btnFavourites.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_favouritesFragment)
         }
 
     }
@@ -165,7 +168,6 @@ class HomeFragment : Fragment() {
         song: Song,
         songAdapter: SongAdapter
     ) {
-        println("wywoluje sie: " + songViewModel.currentSong.value?.isPlaying)
         songAdapter.notifyDataSetChanged()
     }
 
