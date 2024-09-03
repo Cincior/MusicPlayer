@@ -9,6 +9,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.musicplayer.R
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
@@ -42,6 +43,7 @@ class MusicPlayerService : Service() {
 
     private fun start(title: String) {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
+        mainActivityIntent.putExtra("notificationService", true)
         mainActivityIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 
         val pendingIntent = PendingIntent.getActivity(
@@ -59,13 +61,19 @@ class MusicPlayerService : Service() {
             .setContentIntent(pendingIntent)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
+            .setColor(ContextCompat.getColor(this, R.color.darkBlue))
             .build()
         startForeground(1, notification)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        stopSelf()
         super.onTaskRemoved(rootIntent)
+        stopSelf()
+        audioPlayer?.destroyPlayer()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
         audioPlayer?.destroyPlayer()
     }
 

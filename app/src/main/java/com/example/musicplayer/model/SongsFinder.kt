@@ -2,6 +2,7 @@ package com.example.musicplayer.model
 
 import android.app.Application
 import android.content.ContentUris
+import android.content.Context
 import android.database.Cursor
 import android.provider.MediaStore
 import java.util.Locale
@@ -9,9 +10,9 @@ import kotlin.math.ceil
 
 /**
  * It allows to find audio files in specific directory with help of MediaStore
- * @param application application context for getting contentResolver object
+ * @param context application context for getting contentResolver object
  */
-class SongsFinder(private val application: Application) {
+class SongsFinder(private val context: Context) {
     /**
      * Method for getting all audio files.
      * Looks for audio files in Download directory using MediaStore
@@ -32,7 +33,7 @@ class SongsFinder(private val application: Application) {
         val selectionArgs = arrayOf("%Download%") //DIRECTORY
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
-        application.contentResolver.query(
+        context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,
             selection,

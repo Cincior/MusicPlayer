@@ -24,4 +24,9 @@
         <item name="colorPrimaryDark">@color/mediumBlue</item>
         <item name="colorAccent">@color/skyBlue</item>
     </style>
+
+    <style name="searchViewTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorControlActivated">@color/moreDarkBlue</item>
+        <item name="android:textColorHint">@color/black</item>
+    </style>
 </resources>
