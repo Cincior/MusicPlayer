@@ -50,7 +50,6 @@ class SongViewModel() : ViewModel() {
             song.id !in items.value!!.map { it.id }
         }
 
-        println("nowe znalezione: " + newSongs)
         newSongs.forEach {
             items.value?.add(0, it)
         }
