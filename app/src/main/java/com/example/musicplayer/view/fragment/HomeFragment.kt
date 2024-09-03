@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.os.Message
 import android.provider.MediaStore
 import android.view.Gravity
 import androidx.fragment.app.Fragment
@@ -181,17 +182,17 @@ class HomeFragment : Fragment() {
 
             songAdapter.notifyDataSetChanged()
             swipeRefreshLayout.isRefreshing = false;
-            val snackbar = createSnackBar()
+            val snackbar = createSnackBar("Refresh completed!")
             snackbar.show()
 
         }
     }
 
-    private fun createSnackBar(): Snackbar {
+    private fun createSnackBar(message: String): Snackbar {
         val snackbar = Snackbar.make(
             requireContext(),
             binding.homeMain,
-            "Refresh completed!",
+            message,
             Snackbar.LENGTH_SHORT
         )
         snackbar.setAction("OK") {
@@ -231,15 +232,14 @@ class HomeFragment : Fragment() {
                             musicService?.audioPlayer?.destroyPlayer()
                             val itemsCount = songViewModel.getSongsCount()
                             if (itemsCount > 1) {
+                                val newSong: Song
                                 if (listId == itemsCount - 1) {
-                                    val newSong = songViewModel.items.value?.get(0)!!
-                                    newSong.isPlaying = AudioState.PLAY
-                                    songViewModel.updateCurrentSong(newSong)
+                                    newSong = songViewModel.items.value?.get(0)!!
                                 } else {
-                                    val newSong = songViewModel.items.value?.get(listId)!!
-                                    newSong.isPlaying = AudioState.PLAY
-                                    songViewModel.updateCurrentSong(newSong)
+                                    newSong = songViewModel.items.value?.get(listId)!!
                                 }
+                                newSong.isPlaying = AudioState.PLAY
+                                songViewModel.updateCurrentSong(newSong)
                             } else {
                                 TODO("what if there is 1 song")
                             }

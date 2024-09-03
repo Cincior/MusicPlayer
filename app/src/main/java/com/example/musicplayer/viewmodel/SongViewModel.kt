@@ -46,23 +46,34 @@ class SongViewModel() : ViewModel() {
         val sf = SongsFinder(context)
         val songList = sf.getSongsFromDownload()
 
-        //save previous state before insertion
-        val previousSong = currentSong.value
-
-        _items.value = songList
-
-        items.value?.find {
-            it.id == previousSong?.id
-        }.let {
-            it?.isPlaying = previousSong?.isPlaying ?: AudioState.NONE
+        val newSongs = songList.filter { song ->
+            song.id !in items.value!!.map { it.id }
         }
 
+        println("nowe znalezione: " + newSongs)
+        newSongs.forEach {
+            items.value?.add(0, it)
+        }
 
-        forceUpdate()
+//        items.value?.find {
+//            it.id == previousSong?.id
+//        }.let {
+//            it?.isPlaying = previousSong?.isPlaying ?: AudioState.NONE
+//        }
+
+        //forceUpdate()
+
         //fix after update
-        _currentSong.value = items.value?.find {
-            currentSong.value!!.id == it.id
-        }
+//        val prevSong = items.value?.find {
+//            currentSong.value?.id == it.id
+//        }
+//        if (prevSong != null) {
+//            // Trigger observers
+//            _currentSong.value = items.value?.find {
+//                currentSong.value!!.id == it.id
+//            }
+//        }
+
     }
 //    fun getSongsUpdate(context: Context) {
 //        val sf = SongsFinder(context)
@@ -175,5 +186,38 @@ class SongViewModel() : ViewModel() {
     }
 
     fun getSongsCount() = items.value?.size ?: 0
+
+    fun setCurrentSongNext() {
+        val currentIndexInItems = items.value?.indexOf(currentSong.value)
+        if (currentIndexInItems != null) {
+            currentSong.value?.isPlaying = AudioState.NONE
+            if (currentIndexInItems == getSongsCount() - 1) {
+                _currentSong.value = items.value?.get(0).also {
+                    it?.isPlaying = AudioState.PLAY
+                }
+            } else {
+                _currentSong.value = items.value?.get(currentIndexInItems + 1).also {
+                    it?.isPlaying = AudioState.PLAY
+                }
+            }
+        }
+    }
+
+    fun setCurrentSongPrev() {
+        val currentIndexInItems = items.value?.indexOf(currentSong.value)
+        if (currentIndexInItems != null) {
+            currentSong.value?.isPlaying = AudioState.NONE
+            if (currentIndexInItems == 0) {
+                _currentSong.value = items.value?.get(getSongsCount() - 1).also {
+                    it?.isPlaying = AudioState.PLAY
+                }
+            } else {
+                _currentSong.value = items.value?.get(currentIndexInItems - 1).also {
+                    it?.isPlaying = AudioState.PLAY
+                }
+            }
+        }
+        println("czemu dziala: " + currentSong.value)
+    }
 
 }

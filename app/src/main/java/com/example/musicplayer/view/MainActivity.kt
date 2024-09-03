@@ -7,13 +7,17 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.IBinder
+import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -28,6 +32,7 @@ import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.Flow
 
 //val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "config")
@@ -108,7 +113,8 @@ class MainActivity : AppCompatActivity() {
             if (songViewModel.currentSong.value != null) {
                 navController.navigate(R.id.action_homeFragment_to_playerFragment)
             } else {
-                Toast.makeText(this, "Choose song first!", Toast.LENGTH_SHORT).show()
+                val x = createSnackBar("Choose your song first!")
+                x.show()
             }
 
         }
@@ -124,6 +130,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val isFromNotification = intent.getBooleanExtra("notificationService", false)
+        if (isFromNotification) {
+            navController.navigate(R.id.homeFragment)
+        }
     }
 
     private fun changeBottomPlayer(song: Song) {
@@ -182,6 +196,21 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun createSnackBar(message: String): Snackbar {
+        val snackbar = Snackbar.make(
+            this,
+            binding.main,
+            message,
+            Snackbar.LENGTH_SHORT
+        )
+        snackbar.setAction("OK") {
+            snackbar.dismiss()
+        }
+        val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
+        //snackbarParams.gravity = Gravity.END
+        snackbar.view.layoutParams = snackbarParams
+        return snackbar
+    }
 
 //    fun getMusicService(): MusicPlayerService {
 //        return musicService

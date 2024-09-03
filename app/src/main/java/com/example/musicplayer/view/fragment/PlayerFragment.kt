@@ -11,6 +11,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -63,6 +65,8 @@ class PlayerFragment : Fragment() {
     private lateinit var buttonPrevious: ImageButton
     private lateinit var buttonNext: ImageButton
 
+    private lateinit var imageButtonAnimation: Animation
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -70,6 +74,8 @@ class PlayerFragment : Fragment() {
         _binding = FragmentPlayerBinding.inflate(inflater, container, false)
         val serviceIntent = Intent(requireContext(), MusicPlayerService::class.java)
         activity?.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+
+        imageButtonAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.image_button_click_anim)
 
         return binding.root
     }
@@ -86,15 +92,7 @@ class PlayerFragment : Fragment() {
         buttonPrevious = binding.btnPreviousPlayerFragment
         buttonNext = binding.btnNextPlayerFragment
 
-        lifecycleScope.launch {
-            loadThumbnail(songThumbnail)
-        }
-
-        titleTextView.text = songViewModel.currentSong.value?.title ?: "Unknown title"
-
-        duration.text = formatMilliseconds(songViewModel.currentSong.value?.duration ?: 0)
-
-        seekBar.max = songViewModel.currentSong.value?.duration?.toInt() ?: 0
+        setSongData()
 
         buttonRepeat.setOnClickListener {
             songViewModel.toggleRepetition()
@@ -106,10 +104,17 @@ class PlayerFragment : Fragment() {
 
         songViewModel.currentSong.observe(viewLifecycleOwner) { cSong ->
             println("observer: " + cSong.isPlaying)
-            if (cSong.isPlaying in listOf(AudioState.PLAY, AudioState.RESUME, AudioState.PAUSE)) {
-                lifecycleScope.launch {
-                    updateSeekbar()
-                }
+            if (cSong.isPlaying in listOf(
+                    AudioState.PLAY,
+                    AudioState.RESUME
+                )
+            ) {
+                buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause_circle))
+            } else {
+                buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play_circle))
+            }
+            lifecycleScope.launch {
+                updateSeekbar()
             }
         }
 
@@ -123,11 +128,7 @@ class PlayerFragment : Fragment() {
             }
 
             override fun onStopTrackingTouch(s: SeekBar) {
-                if (songViewModel.currentSong.value?.isPlaying in listOf(
-                        AudioState.END,
-                        AudioState.END
-                    )
-                ) {
+                if (songViewModel.currentSong.value?.isPlaying == AudioState.END) {
                     songViewModel.changeCurrentSongState()
                 }
                 musicService?.audioPlayer?.setCurrentPosition(s.progress.toLong())
@@ -136,9 +137,32 @@ class PlayerFragment : Fragment() {
 
         buttonPlayPause.setOnClickListener {
             songViewModel.changeCurrentSongState()
-            //cosik cza wymyslic zamaist isSongPlaying to jakis observer
         }
 
+        buttonNext.setOnClickListener {
+            songViewModel.setCurrentSongNext()
+            setSongData()
+            it.startAnimation(imageButtonAnimation)
+        }
+
+        buttonPrevious.setOnClickListener {
+            songViewModel.setCurrentSongPrev()
+            setSongData()
+            it.startAnimation(imageButtonAnimation)
+        }
+
+    }
+
+    private fun setSongData() {
+        lifecycleScope.launch {
+            loadThumbnail(songThumbnail)
+        }
+
+        titleTextView.text = songViewModel.currentSong.value?.title ?: "Unknown title"
+
+        duration.text = formatMilliseconds(songViewModel.currentSong.value?.duration ?: 0)
+
+        seekBar.max = songViewModel.currentSong.value?.duration?.toInt() ?: 0
     }
 
     override fun onResume() {
