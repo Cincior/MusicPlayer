@@ -153,7 +153,11 @@ class PlayerFragment : Fragment() {
         }
 
         buttonFavourite.setOnClickListener {
-
+            //TODO(change that anim)
+            it.startAnimation(imageButtonAnimation)
+            lifecycleScope.launch {
+                songViewModel.favouritesRepository.addSongToFavourites(songViewModel.currentSong.value?.id.toString())
+            }
         }
 
     }

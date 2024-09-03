@@ -23,6 +23,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.musicplayer.R
@@ -30,17 +31,19 @@ import com.example.musicplayer.databinding.ActivityMainBinding
 import com.example.musicplayer.media.MusicPlayerService
 import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
+import com.example.musicplayer.repository.FavouritesRepository
 import com.example.musicplayer.view.mainActivityHelpers.*
 import com.example.musicplayer.viewmodel.SongViewModel
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-
-//val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "config")
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     companion object {
         var permissionGranted = false
-        //val SHOW_BOTTOM_PLAYER_FLAG = booleanPreferencesKey("showBottomPlayer")
     }
     private lateinit var binding: ActivityMainBinding
 
@@ -97,6 +100,7 @@ class MainActivity : AppCompatActivity() {
 
         // Get songs once the app is being created
         songViewModel.getSongs(this)
+        songViewModel.initializeRepo(this)
 
         textViewTitle = binding.songTitleBottom
         buttonPlayPause = binding.btnPlayPauseBottom
