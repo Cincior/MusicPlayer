@@ -29,7 +29,9 @@
             android:name=".view.MainActivity"
             android:exported="true"
             android:icon="@drawable/ic_play"
-            android:theme="@style/splashScreenTheme">
+            android:theme="@style/splashScreenTheme"
+            android:screenOrientation="portrait"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -118,11 +118,10 @@ class MainActivity : AppCompatActivity() {
 
         titleSectionBottom.setOnClickListener {
             if (songViewModel.currentSong.value != null) {
-                navController
                 navController.navigate(actionToPlayer)
             } else {
-                val x = createSnackBar("Choose your song first!")
-                x.show()
+                val sB = createSnackBar("Choose your song first!")
+                sB.show()
             }
 
         }

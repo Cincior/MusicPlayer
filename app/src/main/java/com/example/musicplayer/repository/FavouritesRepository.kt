@@ -26,6 +26,21 @@ class FavouritesRepository(context: Context) {
         }
     }
 
+    suspend fun deleteAllFavourites() {
+        dataStore.edit { preferences ->
+            preferences[FAVORITE_SONGS] = emptySet()
+        }
+    }
+
+    suspend fun deleteFavourite(songId: String) {
+        dataStore.edit { preferences ->
+            val favSongs = preferences[FAVORITE_SONGS]?.toMutableSet() ?: mutableSetOf()
+            favSongs.removeIf {
+                it == songId
+            }
+            preferences[FAVORITE_SONGS] = favSongs
+        }
+    }
 
     fun getFavouriteSongs(): Flow<Set<String>> {
         return dataStore.data.map { preferences ->
