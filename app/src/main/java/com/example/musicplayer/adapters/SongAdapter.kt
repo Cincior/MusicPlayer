@@ -100,6 +100,16 @@ class SongAdapter(private var items: ArrayList<Song>) :
         notifyDataSetChanged()
     }
 
+    fun filterFavouriteSongs(favIds: Set<String>) {
+        println(favIds)
+        items = defaultItems.filter {
+            it.id.toString() in favIds
+        } as ArrayList<Song>
+
+        println(items)
+        notifyDataSetChanged()
+    }
+
     fun setOnClickListener(listener: IonClickListener?) {
         this.onActionListener = listener
     }

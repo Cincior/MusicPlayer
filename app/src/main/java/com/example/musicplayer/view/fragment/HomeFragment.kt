@@ -38,6 +38,9 @@ import com.example.musicplayer.viewmodel.SongViewModel
 import com.google.android.material.snackbar.Snackbar
 
 class HomeFragment : Fragment() {
+    companion object {
+        lateinit var songAdapter: SongAdapter
+    }
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
@@ -46,7 +49,7 @@ class HomeFragment : Fragment() {
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     private val songViewModel: SongViewModel by activityViewModels()
-    private lateinit var songAdapter: SongAdapter
+
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
     private var musicService: MusicPlayerService? = null
@@ -91,8 +94,8 @@ class HomeFragment : Fragment() {
 
         initializeSearchViewOnActionListener(searchView)
 
-        songViewModel.currentSong.observe(viewLifecycleOwner) { song ->
-            manageSong(song, songAdapter)
+        songViewModel.currentSong.observe(viewLifecycleOwner) {
+            manageSong(songAdapter)
         }
 
         binding.btnPlaylists.setOnClickListener{
@@ -165,7 +168,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun manageSong(
-        song: Song,
         songAdapter: SongAdapter
     ) {
         songAdapter.notifyDataSetChanged()
