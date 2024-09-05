@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -36,11 +37,14 @@ import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.MainActivity
 import com.example.musicplayer.viewmodel.SongViewModel
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
     companion object {
         lateinit var songAdapter: SongAdapter
     }
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
@@ -98,12 +102,16 @@ class HomeFragment : Fragment() {
             manageSong(songAdapter)
         }
 
-        binding.btnPlaylists.setOnClickListener{
+        binding.btnPlaylists.setOnClickListener {
             //findNavController().navigate(R.id.action_homeFragment_to_playerFragment)
         }
 
         binding.btnFavourites.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_favouritesFragment)
+        }
+
+        binding.settingBtn.setOnClickListener {
+            Toast.makeText(requireContext(), "There will be settings (choosing folder with song)", Toast.LENGTH_SHORT).show()
         }
 
     }
@@ -139,11 +147,15 @@ class HomeFragment : Fragment() {
                             }
 
                             1 -> {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Added to favourites (not yet implemented)",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                val activity = requireActivity() as MainActivity
+                                lifecycleScope.launch {
+                                    if (songViewModel.favouritesRepository.isInFavourites(song.id.toString())) {
+                                        activity.createSnackBar("Song is already in favourites!").show()
+                                    } else {
+                                        songViewModel.favouritesRepository.addSongToFavourites(song.id.toString())
+                                        activity.createSnackBar("Added to favourites!").show()
+                                    }
+                                }
                             }
 
                             else -> {
