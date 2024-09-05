@@ -206,7 +206,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun createSnackBar(message: String): Snackbar {
+    fun createSnackBar(message: String): Snackbar {
         val snackbar = Snackbar.make(
             this,
             binding.main,
@@ -217,7 +217,7 @@ class MainActivity : AppCompatActivity() {
             snackbar.dismiss()
         }
         val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
-        //snackbarParams.gravity = Gravity.END
+        snackbarParams.gravity = Gravity.TOP
         snackbar.view.layoutParams = snackbarParams
         return snackbar
     }

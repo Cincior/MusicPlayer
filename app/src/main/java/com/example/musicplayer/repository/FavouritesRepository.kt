@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "favRepo")
@@ -26,25 +27,34 @@ class FavouritesRepository(context: Context) {
         }
     }
 
+    suspend fun deleteSongFromFavourites(songId: String) {
+        dataStore.edit { preferences ->
+            val favSongs = preferences[FAVORITE_SONGS]?.toMutableSet() ?: mutableSetOf()
+            favSongs.remove(songId)
+            preferences[FAVORITE_SONGS] = favSongs
+        }
+    }
+
     suspend fun deleteAllFavourites() {
         dataStore.edit { preferences ->
             preferences[FAVORITE_SONGS] = emptySet()
         }
     }
 
-    suspend fun deleteFavourite(songId: String) {
-        dataStore.edit { preferences ->
-            val favSongs = preferences[FAVORITE_SONGS]?.toMutableSet() ?: mutableSetOf()
-            favSongs.removeIf {
-                it == songId
-            }
-            preferences[FAVORITE_SONGS] = favSongs
-        }
-    }
-
     fun getFavouriteSongs(): Flow<Set<String>> {
         return dataStore.data.map { preferences ->
             preferences[FAVORITE_SONGS]?.toMutableSet() ?: emptySet()
+        }
+    }
+
+    suspend fun isInFavourites(songId: String): Boolean {
+        val favSongSet = dataStore.data.map { preferences ->
+            preferences[FAVORITE_SONGS]?.toMutableSet() ?: emptySet()
+        }.first()
+        return if (songId in favSongSet) {
+            true
+        } else {
+            false
         }
     }
 

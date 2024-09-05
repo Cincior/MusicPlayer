@@ -17,6 +17,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.activityViewModels
@@ -29,7 +30,9 @@ import com.example.musicplayer.view.MainActivity
 import com.example.musicplayer.viewmodel.SongViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
@@ -65,6 +68,7 @@ class PlayerFragment : Fragment() {
     private lateinit var buttonPrevious: ImageButton
     private lateinit var buttonNext: ImageButton
     private lateinit var buttonFavourite: ImageButton
+    private lateinit var favSongs: Set<String>
 
     private lateinit var imageButtonAnimation: Animation
 
@@ -77,6 +81,10 @@ class PlayerFragment : Fragment() {
         activity?.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
 
         imageButtonAnimation = AnimationUtils.loadAnimation(requireContext(), R.anim.image_button_click_anim)
+
+        runBlocking {
+            favSongs = songViewModel.favouritesRepository.getFavouriteSongs().first()
+        }
 
         return binding.root
     }
@@ -117,6 +125,11 @@ class PlayerFragment : Fragment() {
             lifecycleScope.launch {
                 updateSeekbar()
             }
+            if (songViewModel.currentSong.value?.id.toString() in favSongs) {
+                buttonFavourite.setColorFilter(getColor(requireContext(), R.color.red))
+            } else {
+                buttonFavourite.setColorFilter(getColor(requireContext(), R.color.white))
+            }
         }
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -156,7 +169,14 @@ class PlayerFragment : Fragment() {
             //TODO(change that anim)
             it.startAnimation(imageButtonAnimation)
             lifecycleScope.launch {
-                songViewModel.favouritesRepository.addSongToFavourites(songViewModel.currentSong.value?.id.toString())
+                if (songViewModel.currentSong.value?.id.toString() in favSongs) {
+                    songViewModel.favouritesRepository.deleteSongFromFavourites(songViewModel.currentSong.value?.id.toString())
+                    buttonFavourite.setColorFilter(getColor(requireContext(), R.color.white))
+                } else {
+                    songViewModel.favouritesRepository.addSongToFavourites(songViewModel.currentSong.value?.id.toString())
+                    buttonFavourite.setColorFilter(getColor(requireContext(), R.color.red))
+                }
+                favSongs = songViewModel.favouritesRepository.getFavouriteSongs().first()
             }
         }
 
