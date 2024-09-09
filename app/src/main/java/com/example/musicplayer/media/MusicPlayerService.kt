@@ -2,18 +2,21 @@ package com.example.musicplayer.media
 
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
-import android.media.MediaPlayer
-import android.net.Uri
+import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
-import android.widget.Toast
+import android.telephony.TelephonyManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.example.musicplayer.R
-import com.example.musicplayer.model.AudioState
-import com.example.musicplayer.model.Song
+import com.example.musicplayer.media.NotificationChannel.Companion.NOTIFICATION_CHANNEL
 import com.example.musicplayer.view.MainActivity
+import com.example.musicplayer.view.MainActivity.Companion.EXTRA_ARTIST
+import com.example.musicplayer.view.MainActivity.Companion.EXTRA_NOTIFICATION_SERVICE
+import com.example.musicplayer.view.MainActivity.Companion.EXTRA_TITLE
 
 class MusicPlayerService : Service() {
     var audioPlayer: AudioPlayer? = null
@@ -26,6 +29,7 @@ class MusicPlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
         audioPlayer = AudioPlayer(applicationContext)
+
     }
 
     override fun onBind(p0: Intent?): IBinder {
@@ -33,8 +37,8 @@ class MusicPlayerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val title = intent?.getStringExtra("title") ?: "song unknown"
-        val artist = intent?.getStringExtra("artist") ?: "artist unknown"
+        val title = intent?.getStringExtra(EXTRA_TITLE) ?: "song unknown"
+        val artist = intent?.getStringExtra(EXTRA_ARTIST) ?: "artist unknown"
         when (intent?.action) {
             Actions.Start.toString() -> start(title, artist)
             Actions.Stop.toString() -> stopSelf()
@@ -44,7 +48,7 @@ class MusicPlayerService : Service() {
 
     private fun start(title: String, artist: String) {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
-        mainActivityIntent.putExtra("notificationService", true)
+        mainActivityIntent.putExtra(EXTRA_NOTIFICATION_SERVICE, true)
         mainActivityIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 
         val pendingIntent = PendingIntent.getActivity(
@@ -54,7 +58,7 @@ class MusicPlayerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(this, "music-player-channel")
+        val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL)
             .setSmallIcon(R.drawable.ic_action_name)
             .setContentTitle(title)
             .setContentInfo("desc")
@@ -76,11 +80,21 @@ class MusicPlayerService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         audioPlayer?.destroyPlayer()
+
     }
 
     enum class Actions {
         Start,
         Stop
+    }
+
+    private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+            if (state.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
+                println("cringe call")
+            }
+        }
     }
 
 }

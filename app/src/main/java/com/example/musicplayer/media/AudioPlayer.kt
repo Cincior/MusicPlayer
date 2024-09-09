@@ -44,7 +44,6 @@ class AudioPlayer(private val context: Context) {
 
     fun setLooping(isEnabled: Boolean) {
         mediaExoPlayer.repeatMode = if (isEnabled) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
-        Toast.makeText(context, mediaExoPlayer.repeatMode.toString(), Toast.LENGTH_SHORT).show()
     }
 
     fun destroyPlayer() {

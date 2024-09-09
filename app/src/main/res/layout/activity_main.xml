@@ -64,7 +64,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:maxLines="2"
-                    android:text="CHOSE YOUR SONG"
+                    android:text="@string/chose_your_song"
                     android:textColor="@color/white"
                     android:textSize="21sp"
                     android:textStyle="bold" />
@@ -78,6 +78,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:backgroundTint="@color/transparent"
+                android:contentDescription="@string/play_pause_button"
                 android:src="@drawable/ic_pause_btn" />
         </LinearLayout>
 

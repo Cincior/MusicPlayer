@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Message
 import android.provider.MediaStore
 import android.view.Gravity
 import androidx.fragment.app.Fragment
@@ -20,42 +19,33 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.example.musicplayer.R
 import com.example.musicplayer.adapters.SongAdapter
 import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
 import com.example.musicplayer.databinding.FragmentHomeBinding
 import com.example.musicplayer.media.MusicPlayerService
-import com.example.musicplayer.model.AudioState
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.view.MainActivity
 import com.example.musicplayer.viewmodel.SongViewModel
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
     companion object {
         lateinit var songAdapter: SongAdapter
+        private const val EXTRA_ITEM_INDEX = "EXTRA_ITEM_ID"
     }
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    var deletionId = -1 // Id of particular Song that can be deleted
-    var listId = -1 // Id of item in recyclerView that can be deleted
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     private val songViewModel: SongViewModel by activityViewModels()
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var searchView: SearchView
     private var musicService: MusicPlayerService? = null
 
     private val connection = object : ServiceConnection {
@@ -85,22 +75,23 @@ class HomeFragment : Fragment() {
 
         registerIntentSender()
 
-        recyclerView = binding.songList
-        searchView = binding.searchSong
-
         songAdapter = SongAdapter(songViewModel.items.value!!)
         initializeAdapterOnClickFunctions(songAdapter)
 
-        (recyclerView.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
-        recyclerView.adapter = songAdapter
+        (binding.songList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+        binding.songList.adapter = songAdapter
 
         initializeSwipeRefreshLayout()
 
-        initializeSearchViewOnActionListener(searchView)
+        initializeSearchViewOnActionListener(binding.searchSong)
 
         songViewModel.currentSong.observe(viewLifecycleOwner) {
             manageSong(songAdapter)
         }
+
+//        songViewModel.items.observe(viewLifecycleOwner) { items ->
+//
+//        }
 
         binding.btnPlaylists.setOnClickListener {
             //findNavController().navigate(R.id.action_homeFragment_to_playerFragment)
@@ -116,8 +107,9 @@ class HomeFragment : Fragment() {
 
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun initializeAdapterOnClickFunctions(songAdapter: SongAdapter) {
@@ -139,21 +131,29 @@ class HomeFragment : Fragment() {
                                     requireContext().contentResolver,
                                     listOf(song.uri)
                                 )
+                                val intentExtraId = Intent().apply {
+                                    println(position.toString() + "pozycja przed wysalniem")
+                                    putExtra(EXTRA_ITEM_INDEX, position)
+                                }
+
                                 intentSenderLauncher.launch(
-                                    IntentSenderRequest.Builder(deleteRequest).build()
+                                    IntentSenderRequest.Builder(deleteRequest)
+                                        .setFillInIntent(intentExtraId)
+                                        .build()
                                 )
-                                deletionId = song.id.toInt()
-                                listId = position
+//                                deletionId = song.id.toInt()
+//                                println(position.toString() + "???" + deletionId)
+//                                listId = position
                             }
 
                             1 -> {
                                 val activity = requireActivity() as MainActivity
                                 lifecycleScope.launch {
                                     if (songViewModel.favouritesRepository.isInFavourites(song.id.toString())) {
-                                        activity.createSnackBar("Song is already in favourites!").show()
+                                        activity.createSnackBar("Song is already in favourites!", Gravity.TOP).show()
                                     } else {
                                         songViewModel.favouritesRepository.addSongToFavourites(song.id.toString())
-                                        activity.createSnackBar("Added to favourites!").show()
+                                        activity.createSnackBar("Added to favourites!", Gravity.TOP).show()
                                     }
                                 }
                             }
@@ -198,26 +198,11 @@ class HomeFragment : Fragment() {
 
             songAdapter.notifyDataSetChanged()
             swipeRefreshLayout.isRefreshing = false;
-            val snackbar = createSnackBar("Refresh completed!")
+            val activity = requireActivity() as MainActivity
+            val snackbar = activity.createSnackBar("Refresh completed!", Gravity.TOP)
             snackbar.show()
 
         }
-    }
-
-    private fun createSnackBar(message: String): Snackbar {
-        val snackbar = Snackbar.make(
-            requireContext(),
-            binding.homeMain,
-            message,
-            Snackbar.LENGTH_SHORT
-        )
-        snackbar.setAction("OK") {
-            snackbar.dismiss()
-        }
-        val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
-        snackbarParams.gravity = Gravity.TOP
-        snackbar.view.layoutParams = snackbarParams
-        return snackbar
     }
 
     private fun initializeSearchViewOnActionListener(searchView: SearchView) {
@@ -240,33 +225,24 @@ class HomeFragment : Fragment() {
     private fun registerIntentSender() {
         // Registering deletion
         intentSenderLauncher =
-            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-                if (it.resultCode == RESULT_OK) {
-                    if (deletionId != -1) {
-                        songViewModel.deleteSong(deletionId.toLong())
-                        if (songViewModel.currentSong.value?.id == deletionId.toLong()) {
-                            musicService?.audioPlayer?.destroyPlayer()
-                            val itemsCount = songViewModel.getSongsCount()
-                            if (itemsCount > 1) {
-                                val newSong: Song
-                                if (listId == itemsCount - 1) {
-                                    newSong = songViewModel.items.value?.get(0)!!
-                                } else {
-                                    newSong = songViewModel.items.value?.get(listId)!!
-                                }
-                                newSong.isPlaying = AudioState.PLAY
-                                songViewModel.updateCurrentSong(newSong)
-                            } else {
-                                TODO("what if there is 1 song")
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    val deletionData = result.data
+                    if (deletionData != null) {
+                        val deletionIndex = deletionData.getIntExtra(EXTRA_ITEM_INDEX, -1)
+                        println(deletionIndex.toString() + "tutaj")
+                        if (deletionIndex != -1) {
+                            if (songViewModel.currentSong.value?.id?.toInt() == deletionIndex) {
+                                musicService?.audioPlayer?.destroyPlayer()
                             }
+                            songViewModel.deleteSong(deletionIndex)
+                            songAdapter.updateAfterDeletion(
+                                deletionIndex,
+                                songViewModel.getSongsCount(),
+                            )
                         }
-                        songAdapter.updateAfterDeletion(
-                            listId,
-                            songViewModel.items.value!!.size,
-                            deletionId.toLong()
-                        )
-                        deletionId = -1
-                        listId = -1
+                    } else {
+                        println(deletionData)
                     }
                 } else {
                     Toast.makeText(

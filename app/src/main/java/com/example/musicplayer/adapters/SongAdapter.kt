@@ -114,21 +114,13 @@ class SongAdapter(private var items: ArrayList<Song>) :
         this.onActionListener = listener
     }
 
-    fun updateAfterDeletion(id: Int, count: Int, delSongId: Long) {
+    fun updateAfterDeletion(id: Int, count: Int) {
         notifyItemRangeChanged(id, count)
         notifyItemRemoved(id)
 
-        items.find {
-            it.id == delSongId
-        }.let {
-            items.remove(it)
-        }
+        items.removeAt(id)
         //update copy of items as well
-        defaultItems.find {
-            it.id == delSongId
-        }.let {
-            defaultItems.remove(it)
-        }
+        defaultItems.removeAt(id)
     }
 
     fun insertNewItems(newSongs: ArrayList<Song>) {

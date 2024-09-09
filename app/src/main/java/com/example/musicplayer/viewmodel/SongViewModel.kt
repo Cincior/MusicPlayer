@@ -64,13 +64,29 @@ class SongViewModel() : ViewModel() {
         favouritesRepository = FavouritesRepository(context)
     }
 
-    fun deleteSong(id: Long) {
+    fun deleteSong(itemIndex: Int) {
         val newSongs = _items.value
 
-        val r = newSongs?.removeIf { it.id == id }
+        val r = newSongs?.removeAt(itemIndex)
         if (newSongs != null) {
             updateSongs(newSongs)
         }
+
+        if (currentSong.value?.id == r?.id) {
+            val itemsCount = getSongsCount()
+            if (itemsCount > 1) {
+                val newSong = if (itemIndex == itemsCount - 1) {
+                    _items.value?.get(0)!!
+                } else {
+                    _items.value?.get(itemIndex)!!
+                }
+                newSong.isPlaying = AudioState.PLAY
+                updateCurrentSong(newSong)
+            } else {
+                TODO("what if there is 1 song")
+            }
+        }
+
     }
 
     fun toggleRepetition() {

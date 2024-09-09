@@ -182,6 +182,11 @@ class PlayerFragment : Fragment() {
 
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun setSongData() {
         lifecycleScope.launch {
             loadThumbnail(songThumbnail)

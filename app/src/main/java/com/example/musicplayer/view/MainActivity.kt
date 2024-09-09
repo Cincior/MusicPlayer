@@ -3,6 +3,7 @@ package com.example.musicplayer.view
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -41,8 +42,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+
+
+
 class MainActivity : AppCompatActivity() {
     companion object {
+        const val EXTRA_TITLE = "title"
+        const val EXTRA_ARTIST = "artist"
+        const val EXTRA_NOTIFICATION_SERVICE = "notificationService"
         var permissionGranted = false
     }
     private lateinit var binding: ActivityMainBinding
@@ -57,7 +64,7 @@ class MainActivity : AppCompatActivity() {
     private var actionToPlayer = R.id.action_homeFragment_to_playerFragment
 
 
-    private var musicService: MusicPlayerService? = null
+    var musicService: MusicPlayerService? = null
     private lateinit var navController: NavController
     private var isBound = false
 
@@ -84,7 +91,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(binding.root)
-        Toast.makeText(this, "OnCreate", Toast.LENGTH_SHORT).show()
         val intent = Intent(this, MusicPlayerService::class.java)
         bindService(intent, connection, Context.BIND_AUTO_CREATE)
 
@@ -120,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             if (songViewModel.currentSong.value != null) {
                 navController.navigate(actionToPlayer)
             } else {
-                val sB = createSnackBar("Choose your song first!")
+                val sB = createSnackBar("Choose your song first!", Gravity.END)
                 sB.show()
             }
 
@@ -146,7 +152,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val isFromNotification = intent.getBooleanExtra("notificationService", false)
+        val isFromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION_SERVICE, false)
         if (isFromNotification) {
             navController.navigate(R.id.homeFragment)
         }
@@ -171,7 +177,7 @@ class MainActivity : AppCompatActivity() {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 permissionGranted = true
             } else {
-                Toast.makeText(this, "Odmowa uprawnien", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show()
                 permissionGranted = false
             }
         }
@@ -186,8 +192,8 @@ class MainActivity : AppCompatActivity() {
             }
             AudioState.PLAY -> {
                 Intent(this, MusicPlayerService::class.java).also {
-                    it.putExtra("title", song.title)
-                    it.putExtra("artist", song.artist)
+                    it.putExtra(EXTRA_TITLE, song.title)
+                    it.putExtra(EXTRA_ARTIST, song.artist)
                     it.action = MusicPlayerService.Actions.Start.toString()
                     startService(it)
                 }
@@ -206,7 +212,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun createSnackBar(message: String): Snackbar {
+    fun createSnackBar(message: String, gravity: Int): Snackbar {
         val snackbar = Snackbar.make(
             this,
             binding.main,
@@ -217,7 +223,7 @@ class MainActivity : AppCompatActivity() {
             snackbar.dismiss()
         }
         val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
-        snackbarParams.gravity = Gravity.TOP
+        snackbarParams.gravity = gravity
         snackbar.view.layoutParams = snackbarParams
         return snackbar
     }
