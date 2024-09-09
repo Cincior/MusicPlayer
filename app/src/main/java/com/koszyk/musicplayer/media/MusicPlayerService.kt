@@ -1,22 +1,21 @@
-package com.example.musicplayer.media
+package com.koszyk.musicplayer.media
 
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
 import android.telephony.TelephonyManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.example.musicplayer.R
-import com.example.musicplayer.media.NotificationChannel.Companion.NOTIFICATION_CHANNEL
-import com.example.musicplayer.view.MainActivity
-import com.example.musicplayer.view.MainActivity.Companion.EXTRA_ARTIST
-import com.example.musicplayer.view.MainActivity.Companion.EXTRA_NOTIFICATION_SERVICE
-import com.example.musicplayer.view.MainActivity.Companion.EXTRA_TITLE
+import com.koszyk.musicplayer.R
+import com.koszyk.musicplayer.media.NotificationChannel.Companion.NOTIFICATION_CHANNEL
+import com.koszyk.musicplayer.view.MainActivity
+import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_ARTIST
+import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_NOTIFICATION_SERVICE
+import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_TITLE
 
 class MusicPlayerService : Service() {
     var audioPlayer: AudioPlayer? = null

@@ -1,4 +1,4 @@
-package com.example.musicplayer.adapters
+package com.koszyk.musicplayer.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,9 +7,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.R
-import com.example.musicplayer.model.AudioState
-import com.example.musicplayer.model.Song
+import com.koszyk.musicplayer.R
+import com.koszyk.musicplayer.model.AudioState
+import com.koszyk.musicplayer.model.Song
 import pl.droidsonroids.gif.GifDrawable
 import java.util.Locale
 import kotlin.math.ceil

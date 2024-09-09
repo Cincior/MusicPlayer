@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.musicplayer"
+    namespace = "com.koszyk.musicplayer"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.musicplayer"
+        applicationId = "com.koszyk.musicplayer"
         minSdk = 30
         targetSdk = 34
         versionCode = 1

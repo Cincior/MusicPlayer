@@ -1,8 +1,7 @@
-package com.example.musicplayer.media
+package com.koszyk.musicplayer.media
 
 import android.content.Context
 import android.net.Uri
-import android.widget.Toast
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer

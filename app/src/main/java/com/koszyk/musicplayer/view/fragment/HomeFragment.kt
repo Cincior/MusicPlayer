@@ -1,4 +1,4 @@
-package com.example.musicplayer.view.fragment
+package com.koszyk.musicplayer.view.fragment
 
 import android.content.ComponentName
 import android.content.Context
@@ -23,14 +23,14 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.SimpleItemAnimator
-import com.example.musicplayer.R
-import com.example.musicplayer.adapters.SongAdapter
-import com.example.musicplayer.adapters.SongAdapter.ItemViewHolder
-import com.example.musicplayer.databinding.FragmentHomeBinding
-import com.example.musicplayer.media.MusicPlayerService
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.view.MainActivity
-import com.example.musicplayer.viewmodel.SongViewModel
+import com.koszyk.musicplayer.R
+import com.koszyk.musicplayer.adapters.SongAdapter
+import com.koszyk.musicplayer.adapters.SongAdapter.ItemViewHolder
+import com.koszyk.musicplayer.databinding.FragmentHomeBinding
+import com.koszyk.musicplayer.media.MusicPlayerService
+import com.koszyk.musicplayer.model.Song
+import com.koszyk.musicplayer.view.MainActivity
+import com.koszyk.musicplayer.viewmodel.SongViewModel
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {

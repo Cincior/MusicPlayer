@@ -1,11 +1,11 @@
-package com.example.musicplayer.view.mainActivityHelpers
+package com.koszyk.musicplayer.view.mainActivityHelpers
 
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.musicplayer.view.MainActivity
-import com.example.musicplayer.view.MainActivity.Companion.permissionGranted
+import com.koszyk.musicplayer.view.MainActivity
+import com.koszyk.musicplayer.view.MainActivity.Companion.permissionGranted
 
 
 const val requestCodeReadMemory = 0

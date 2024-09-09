@@ -1,13 +1,13 @@
-package com.example.musicplayer.viewmodel
+package com.koszyk.musicplayer.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.musicplayer.model.AudioState
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.model.SongsFinder
-import com.example.musicplayer.repository.FavouritesRepository
+import com.koszyk.musicplayer.model.AudioState
+import com.koszyk.musicplayer.model.Song
+import com.koszyk.musicplayer.model.SongsFinder
+import com.koszyk.musicplayer.repository.FavouritesRepository
 
 
 class SongViewModel() : ViewModel() {

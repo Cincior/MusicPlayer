@@ -1,4 +1,4 @@
-package com.example.musicplayer.media
+package com.koszyk.musicplayer.media
 
 import android.app.Application
 import android.app.NotificationChannel

@@ -1,4 +1,4 @@
-package com.example.musicplayer.view.fragment
+package com.koszyk.musicplayer.view.fragment
 
 import android.content.ComponentName
 import android.content.Context
@@ -17,17 +17,15 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getColor
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import com.example.musicplayer.R
-import com.example.musicplayer.databinding.FragmentPlayerBinding
-import com.example.musicplayer.media.MusicPlayerService
-import com.example.musicplayer.model.AudioState
-import com.example.musicplayer.view.MainActivity
-import com.example.musicplayer.viewmodel.SongViewModel
+import com.koszyk.musicplayer.R
+import com.koszyk.musicplayer.databinding.FragmentPlayerBinding
+import com.koszyk.musicplayer.media.MusicPlayerService
+import com.koszyk.musicplayer.model.AudioState
+import com.koszyk.musicplayer.viewmodel.SongViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
