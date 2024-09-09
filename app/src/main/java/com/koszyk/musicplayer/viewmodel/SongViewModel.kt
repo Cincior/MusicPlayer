@@ -131,6 +131,16 @@ class SongViewModel() : ViewModel() {
         updateCurrentSong(currentSong.value!!)
     }
 
+    fun changeCurrentSongStateAfterAudioFocusLost() {
+        if (currentSong.value == null) {
+            return
+        }
+
+        currentSong.value!!.isPlaying = AudioState.PAUSE
+
+        updateCurrentSong(currentSong.value!!)
+    }
+
     fun getSongsCount() = items.value?.size ?: 0
 
     fun setCurrentSongNext() {

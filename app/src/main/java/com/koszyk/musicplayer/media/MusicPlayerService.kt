@@ -5,6 +5,9 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Binder
 import android.os.IBinder
 import android.telephony.TelephonyManager
@@ -46,6 +49,8 @@ class MusicPlayerService : Service() {
     }
 
     private fun start(title: String, artist: String) {
+
+
         val mainActivityIntent = Intent(this, MainActivity::class.java)
         mainActivityIntent.putExtra(EXTRA_NOTIFICATION_SERVICE, true)
         mainActivityIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -81,6 +86,7 @@ class MusicPlayerService : Service() {
         audioPlayer?.destroyPlayer()
 
     }
+
 
     enum class Actions {
         Start,

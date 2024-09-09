@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Gravity
@@ -35,18 +38,34 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_ARTIST = "artist"
         const val EXTRA_NOTIFICATION_SERVICE = "notificationService"
         var permissionGranted = false
+        lateinit var audioManager: AudioManager
+        lateinit var focusRequest: AudioFocusRequest
     }
     private lateinit var binding: ActivityMainBinding
 
     private val songViewModel: SongViewModel by viewModels()
 
-    private lateinit var textViewTitle: TextView
-    private lateinit var buttonPlayPause: ImageButton
-    private lateinit var titleSectionBottom: LinearLayout
-    private lateinit var bottomPlayerManager: LinearLayout
-
     private var actionToPlayer = R.id.action_homeFragment_to_playerFragment
 
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        println(focusChange)
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                // Permanent loss of audio focus
+                musicService?.audioPlayer?.pauseSong()
+                songViewModel.changeCurrentSongStateAfterAudioFocusLost()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // Temporary loss of audio focus
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // Lower the volume or duck the audio
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                // Regain focus, resume playback
+            }
+        }
+    }
 
     var musicService: MusicPlayerService? = null
     private lateinit var navController: NavController
@@ -68,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         stopService(Intent(this, MusicPlayerService::class.java))
         unbindService(connection)
+        audioManager.abandonAudioFocusRequest(focusRequest)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +97,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         val intent = Intent(this, MusicPlayerService::class.java)
         bindService(intent, connection, Context.BIND_AUTO_CREATE)
+
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build()
+
+        focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(audioAttributes)
+            .setAcceptsDelayedFocusGain(true)
+            .setOnAudioFocusChangeListener(audioFocusChangeListener)
+            .build()
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
@@ -92,21 +124,19 @@ class MainActivity : AppCompatActivity() {
         songViewModel.getSongs(this)
         songViewModel.initializeRepo(this)
 
-        textViewTitle = binding.songTitleBottom
-        buttonPlayPause = binding.btnPlayPauseBottom
-        titleSectionBottom = binding.titleSectionBottom
-        bottomPlayerManager = binding.bottomPlayerManager
-
         songViewModel.currentSong.observe(this) { s ->
+            if (s.isPlaying != AudioState.PAUSE) {
+                audioManager.requestAudioFocus(focusRequest)
+            }
             changeBottomPlayer(s)
             manageSong(s)
         }
 
-        buttonPlayPause.setOnClickListener {
+        binding.btnPlayPauseBottom.setOnClickListener {
             songViewModel.changeCurrentSongState()
         }
 
-        titleSectionBottom.setOnClickListener {
+        binding.titleSectionBottom.setOnClickListener {
             if (songViewModel.currentSong.value != null) {
                 navController.navigate(actionToPlayer)
             } else {
@@ -119,15 +149,15 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             when (destination.id) {
                 R.id.playerFragment -> {
-                    bottomPlayerManager.visibility = View.GONE
+                    binding.bottomPlayerManager.visibility = View.GONE
                 }
                 R.id.favouritesFragment -> {
                     actionToPlayer = R.id.action_favouritesFragment_to_playerFragment
-                    bottomPlayerManager.visibility = View.VISIBLE
+                    binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
                 R.id.homeFragment -> {
                     actionToPlayer = R.id.action_homeFragment_to_playerFragment
-                    bottomPlayerManager.visibility = View.VISIBLE
+                    binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
             }
         }
@@ -143,11 +173,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun changeBottomPlayer(song: Song) {
-        textViewTitle.text = song.title
+        binding.songTitleBottom.text = song.title
         if (song.isPlaying == AudioState.PLAY || song.isPlaying == AudioState.RESUME) {
-            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_btn))
+            binding.btnPlayPauseBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_btn))
         } else {
-            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_btn))
+            binding.btnPlayPauseBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_btn))
         }
     }
 

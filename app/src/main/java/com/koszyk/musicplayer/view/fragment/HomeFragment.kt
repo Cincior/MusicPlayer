@@ -30,6 +30,8 @@ import com.koszyk.musicplayer.databinding.FragmentHomeBinding
 import com.koszyk.musicplayer.media.MusicPlayerService
 import com.koszyk.musicplayer.model.Song
 import com.koszyk.musicplayer.view.MainActivity
+import com.koszyk.musicplayer.view.MainActivity.Companion.audioManager
+import com.koszyk.musicplayer.view.MainActivity.Companion.focusRequest
 import com.koszyk.musicplayer.viewmodel.SongViewModel
 import kotlinx.coroutines.launch
 
