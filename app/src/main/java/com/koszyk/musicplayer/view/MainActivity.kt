@@ -38,15 +38,14 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_ARTIST = "artist"
         const val EXTRA_NOTIFICATION_SERVICE = "notificationService"
         var permissionGranted = false
-        lateinit var audioManager: AudioManager
-        lateinit var focusRequest: AudioFocusRequest
     }
     private lateinit var binding: ActivityMainBinding
+    private var actionToPlayer = R.id.action_homeFragment_to_playerFragment
 
     private val songViewModel: SongViewModel by viewModels()
 
-    private var actionToPlayer = R.id.action_homeFragment_to_playerFragment
-
+    private lateinit var audioManager: AudioManager
+    private lateinit var focusRequest: AudioFocusRequest
     private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         println(focusChange)
         when (focusChange) {

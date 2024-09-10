@@ -51,11 +51,7 @@ class FavouritesRepository(context: Context) {
         val favSongSet = dataStore.data.map { preferences ->
             preferences[FAVORITE_SONGS]?.toMutableSet() ?: emptySet()
         }.first()
-        return if (songId in favSongSet) {
-            true
-        } else {
-            false
-        }
+        return songId in favSongSet
     }
 
 }
