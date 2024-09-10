@@ -1,63 +1,73 @@
-package com.example.musicplayer.view
+package com.koszyk.musicplayer.view
 
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Gravity
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import com.example.musicplayer.R
-import com.example.musicplayer.databinding.ActivityMainBinding
-import com.example.musicplayer.media.MusicPlayerService
-import com.example.musicplayer.model.AudioState
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.repository.FavouritesRepository
-import com.example.musicplayer.view.mainActivityHelpers.*
-import com.example.musicplayer.viewmodel.SongViewModel
+import com.koszyk.musicplayer.R
+import com.koszyk.musicplayer.databinding.ActivityMainBinding
+import com.koszyk.musicplayer.media.MusicPlayerService
+import com.koszyk.musicplayer.model.AudioState
+import com.koszyk.musicplayer.model.Song
+import com.koszyk.musicplayer.view.mainActivityHelpers.*
+import com.koszyk.musicplayer.viewmodel.SongViewModel
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+
 
 class MainActivity : AppCompatActivity() {
     companion object {
+        const val EXTRA_TITLE = "title"
+        const val EXTRA_ARTIST = "artist"
+        const val EXTRA_NOTIFICATION_SERVICE = "notificationService"
         var permissionGranted = false
+        lateinit var audioManager: AudioManager
+        lateinit var focusRequest: AudioFocusRequest
     }
     private lateinit var binding: ActivityMainBinding
 
     private val songViewModel: SongViewModel by viewModels()
 
-    private lateinit var textViewTitle: TextView
-    private lateinit var buttonPlayPause: ImageButton
-    private lateinit var titleSectionBottom: LinearLayout
-    private lateinit var bottomPlayerManager: LinearLayout
-
     private var actionToPlayer = R.id.action_homeFragment_to_playerFragment
 
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        println(focusChange)
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                // Permanent loss of audio focus
+                musicService?.audioPlayer?.pauseSong()
+                songViewModel.changeCurrentSongStateAfterAudioFocusLost()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // Temporary loss of audio focus
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // Lower the volume or duck the audio
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                // Regain focus, resume playback
+            }
+        }
+    }
 
-    private var musicService: MusicPlayerService? = null
+    var musicService: MusicPlayerService? = null
     private lateinit var navController: NavController
     private var isBound = false
 
@@ -77,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         stopService(Intent(this, MusicPlayerService::class.java))
         unbindService(connection)
+        audioManager.abandonAudioFocusRequest(focusRequest)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,9 +95,20 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setTheme(R.style.Theme_MusicPlayer)
         setContentView(binding.root)
-        Toast.makeText(this, "OnCreate", Toast.LENGTH_SHORT).show()
         val intent = Intent(this, MusicPlayerService::class.java)
         bindService(intent, connection, Context.BIND_AUTO_CREATE)
+
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build()
+
+        focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            .setAudioAttributes(audioAttributes)
+            .setAcceptsDelayedFocusGain(true)
+            .setOnAudioFocusChangeListener(audioFocusChangeListener)
+            .build()
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
         navController = navHostFragment.navController
@@ -102,25 +124,23 @@ class MainActivity : AppCompatActivity() {
         songViewModel.getSongs(this)
         songViewModel.initializeRepo(this)
 
-        textViewTitle = binding.songTitleBottom
-        buttonPlayPause = binding.btnPlayPauseBottom
-        titleSectionBottom = binding.titleSectionBottom
-        bottomPlayerManager = binding.bottomPlayerManager
-
         songViewModel.currentSong.observe(this) { s ->
+            if (s.isPlaying != AudioState.PAUSE) {
+                audioManager.requestAudioFocus(focusRequest)
+            }
             changeBottomPlayer(s)
             manageSong(s)
         }
 
-        buttonPlayPause.setOnClickListener {
+        binding.btnPlayPauseBottom.setOnClickListener {
             songViewModel.changeCurrentSongState()
         }
 
-        titleSectionBottom.setOnClickListener {
+        binding.titleSectionBottom.setOnClickListener {
             if (songViewModel.currentSong.value != null) {
                 navController.navigate(actionToPlayer)
             } else {
-                val sB = createSnackBar("Choose your song first!")
+                val sB = createSnackBar("Choose your song first!", Gravity.END)
                 sB.show()
             }
 
@@ -129,15 +149,15 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             when (destination.id) {
                 R.id.playerFragment -> {
-                    bottomPlayerManager.visibility = View.GONE
+                    binding.bottomPlayerManager.visibility = View.GONE
                 }
                 R.id.favouritesFragment -> {
                     actionToPlayer = R.id.action_favouritesFragment_to_playerFragment
-                    bottomPlayerManager.visibility = View.VISIBLE
+                    binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
                 R.id.homeFragment -> {
                     actionToPlayer = R.id.action_homeFragment_to_playerFragment
-                    bottomPlayerManager.visibility = View.VISIBLE
+                    binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
             }
         }
@@ -146,18 +166,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val isFromNotification = intent.getBooleanExtra("notificationService", false)
+        val isFromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION_SERVICE, false)
         if (isFromNotification) {
             navController.navigate(R.id.homeFragment)
         }
     }
 
     private fun changeBottomPlayer(song: Song) {
-        textViewTitle.text = song.title
+        binding.songTitleBottom.text = song.title
         if (song.isPlaying == AudioState.PLAY || song.isPlaying == AudioState.RESUME) {
-            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_btn))
+            binding.btnPlayPauseBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_btn))
         } else {
-            buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_btn))
+            binding.btnPlayPauseBottom.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_btn))
         }
     }
 
@@ -171,7 +191,7 @@ class MainActivity : AppCompatActivity() {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 permissionGranted = true
             } else {
-                Toast.makeText(this, "Odmowa uprawnien", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Permissions denied", Toast.LENGTH_SHORT).show()
                 permissionGranted = false
             }
         }
@@ -186,8 +206,8 @@ class MainActivity : AppCompatActivity() {
             }
             AudioState.PLAY -> {
                 Intent(this, MusicPlayerService::class.java).also {
-                    it.putExtra("title", song.title)
-                    it.putExtra("artist", song.artist)
+                    it.putExtra(EXTRA_TITLE, song.title)
+                    it.putExtra(EXTRA_ARTIST, song.artist)
                     it.action = MusicPlayerService.Actions.Start.toString()
                     startService(it)
                 }
@@ -206,7 +226,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun createSnackBar(message: String): Snackbar {
+    fun createSnackBar(message: String, gravity: Int): Snackbar {
         val snackbar = Snackbar.make(
             this,
             binding.main,
@@ -217,7 +237,7 @@ class MainActivity : AppCompatActivity() {
             snackbar.dismiss()
         }
         val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
-        snackbarParams.gravity = Gravity.TOP
+        snackbarParams.gravity = gravity
         snackbar.view.layoutParams = snackbarParams
         return snackbar
     }

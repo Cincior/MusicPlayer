@@ -1,12 +1,8 @@
-package com.example.musicplayer.model
+package com.koszyk.musicplayer.model
 
-import android.app.Application
 import android.content.ContentUris
 import android.content.Context
-import android.database.Cursor
 import android.provider.MediaStore
-import java.util.Locale
-import kotlin.math.ceil
 
 /**
  * It allows to find audio files in specific directory with help of MediaStore

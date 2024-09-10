@@ -1,4 +1,4 @@
-package com.example.musicplayer.model
+package com.koszyk.musicplayer.model
 
 import android.net.Uri
 

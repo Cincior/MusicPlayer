@@ -1,13 +1,13 @@
-package com.example.musicplayer.viewmodel
+package com.koszyk.musicplayer.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.musicplayer.model.AudioState
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.model.SongsFinder
-import com.example.musicplayer.repository.FavouritesRepository
+import com.koszyk.musicplayer.model.AudioState
+import com.koszyk.musicplayer.model.Song
+import com.koszyk.musicplayer.model.SongsFinder
+import com.koszyk.musicplayer.repository.FavouritesRepository
 
 
 class SongViewModel() : ViewModel() {
@@ -64,13 +64,29 @@ class SongViewModel() : ViewModel() {
         favouritesRepository = FavouritesRepository(context)
     }
 
-    fun deleteSong(id: Long) {
+    fun deleteSong(itemIndex: Int) {
         val newSongs = _items.value
 
-        val r = newSongs?.removeIf { it.id == id }
+        val r = newSongs?.removeAt(itemIndex)
         if (newSongs != null) {
             updateSongs(newSongs)
         }
+
+        if (currentSong.value?.id == r?.id) {
+            val itemsCount = getSongsCount()
+            if (itemsCount > 1) {
+                val newSong = if (itemIndex == itemsCount - 1) {
+                    _items.value?.get(0)!!
+                } else {
+                    _items.value?.get(itemIndex)!!
+                }
+                newSong.isPlaying = AudioState.PLAY
+                updateCurrentSong(newSong)
+            } else {
+                TODO("what if there is 1 song")
+            }
+        }
+
     }
 
     fun toggleRepetition() {
@@ -112,6 +128,16 @@ class SongViewModel() : ViewModel() {
             AudioState.END -> currentSong.value?.isPlaying = AudioState.PLAY
             else -> println("ERROR CHANGING STATE")
         }
+        updateCurrentSong(currentSong.value!!)
+    }
+
+    fun changeCurrentSongStateAfterAudioFocusLost() {
+        if (currentSong.value == null) {
+            return
+        }
+
+        currentSong.value!!.isPlaying = AudioState.PAUSE
+
         updateCurrentSong(currentSong.value!!)
     }
 

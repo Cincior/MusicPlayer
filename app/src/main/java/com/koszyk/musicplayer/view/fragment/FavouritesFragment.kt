@@ -1,4 +1,4 @@
-package com.example.musicplayer.view.fragment
+package com.koszyk.musicplayer.view.fragment
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -9,17 +9,13 @@ import androidx.core.widget.ContentLoadingProgressBar
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.R
-import com.example.musicplayer.adapters.SongAdapter
-import com.example.musicplayer.databinding.FragmentFavouritesBinding
-import com.example.musicplayer.model.Song
-import com.example.musicplayer.viewmodel.SongViewModel
-import kotlinx.coroutines.CoroutineScope
+import com.koszyk.musicplayer.adapters.SongAdapter
+import com.koszyk.musicplayer.databinding.FragmentFavouritesBinding
+import com.koszyk.musicplayer.viewmodel.SongViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 class FavouritesFragment : Fragment() {
@@ -65,6 +61,11 @@ class FavouritesFragment : Fragment() {
             songAdapter.notifyDataSetChanged()
         }
 
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
 }

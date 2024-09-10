@@ -1,4 +1,4 @@
-package com.example.musicplayer.repository
+package com.koszyk.musicplayer.repository
 
 import android.content.Context
 import androidx.datastore.core.DataStore
