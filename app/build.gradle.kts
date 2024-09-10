@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -36,6 +37,11 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
 }
 
@@ -46,6 +52,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -55,7 +62,6 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.glide)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(libs.material)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.dash)
     implementation(libs.androidx.media3.ui)
@@ -64,5 +70,10 @@ dependencies {
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.datastore.preferences)
+
+    val composeBom = platform("androidx.compose:compose-bom:2024.09.00")
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+    implementation(libs.androidx.material3)
 
 }

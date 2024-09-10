@@ -103,6 +103,7 @@ class HomeFragment : Fragment() {
 
         binding.settingBtn.setOnClickListener {
             Toast.makeText(requireContext(), "There will be settings (choosing folder with song)", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_homeFragment_to_settingsFragment)
         }
 
     }

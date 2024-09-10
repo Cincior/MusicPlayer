@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_homeFragment_to_favouritesFragment"
             app:destination="@id/favouritesFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
     <fragment
         android:id="@+id/playerFragment"
@@ -34,4 +37,8 @@
             android:id="@+id/action_favouritesFragment_to_playerFragment"
             app:destination="@id/playerFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.koszyk.musicplayer.view.fragment.SettingsFragment"
+        android:label="SettingsFragment" />
 </navigation>

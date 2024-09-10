@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity() {
             if (songViewModel.currentSong.value != null) {
                 navController.navigate(actionToPlayer)
             } else {
-                val sB = createSnackBar("Choose your song first!", Gravity.END)
+                val sB = createSnackBar("Choose your song first!", null)
                 sB.show()
             }
 
@@ -225,7 +225,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun createSnackBar(message: String, gravity: Int): Snackbar {
+    fun createSnackBar(message: String, gravity: Int?): Snackbar {
         val snackbar = Snackbar.make(
             this,
             binding.main,
@@ -235,9 +235,12 @@ class MainActivity : AppCompatActivity() {
         snackbar.setAction("OK") {
             snackbar.dismiss()
         }
-        val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
-        snackbarParams.gravity = gravity
-        snackbar.view.layoutParams = snackbarParams
+        if (gravity != null) {
+            val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
+            snackbarParams.gravity = gravity
+            snackbar.view.layoutParams = snackbarParams
+        }
+
         return snackbar
     }
 }
