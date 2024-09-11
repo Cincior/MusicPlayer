@@ -27,7 +27,7 @@ class SongsFinder(private val context: Context) {
         )
         //val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("%Download%") //DIRECTORY
+        val selectionArgs = arrayOf("%ZEAMSONEPLYTA%") //DIRECTORY
 
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
