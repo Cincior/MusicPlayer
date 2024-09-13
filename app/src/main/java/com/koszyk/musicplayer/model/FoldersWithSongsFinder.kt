@@ -26,16 +26,19 @@ class FoldersWithSongsFinder() {
         )
 
         cursor?.use {
-            val dataIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            val dataIndex = cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
 
             while (cursor.moveToNext()) {
                 val filePath = cursor.getString(dataIndex)
-                val folderPath = filePath.substring(0, filePath.lastIndexOf('/'))
 
+                val folderPath = filePath.substring(0, filePath.lastIndexOf('/'))
+                println("folderpath: " + folderPath)
                 audioFolders.add(folderPath)
             }
         }
 
+
+       println("aktualne foldery: " + audioFolders)
         return audioFolders.toList()
     }
 }

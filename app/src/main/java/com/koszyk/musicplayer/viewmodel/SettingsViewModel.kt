@@ -10,10 +10,9 @@ import com.koszyk.musicplayer.model.FoldersWithSongsFinder
 import com.koszyk.musicplayer.view.fragment.SettingsFragment.Companion.DEVICE_ID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 
-class FirebaseDirectoriesViewModel: ViewModel() {
+class SettingsViewModel: ViewModel() {
     private val _dataState = MutableStateFlow<List<String>>(emptyList())
     val dataState: StateFlow<List<String>> get() = _dataState
 
@@ -28,7 +27,7 @@ class FirebaseDirectoriesViewModel: ViewModel() {
             val folderFinder = FoldersWithSongsFinder()
             val foldersPaths = folderFinder.getFoldersContainingAudioFiles(context)
 
-            val foldersToUpdate = foldersPaths.associateWith { false }
+            val foldersFromStorage = foldersPaths.associateWith { false }.toMutableMap()
 
             docRef
                 .get()
@@ -36,32 +35,25 @@ class FirebaseDirectoriesViewModel: ViewModel() {
                     if (document.exists()) {
                         val documentData = document.data ?: emptyMap()
 
-                        val foldersInDatabase = documentData.keys.toSet()
-                        val newFoundedFolders = foldersToUpdate.keys - foldersInDatabase
-
-                        _dataState.value = foldersInDatabase.toList()
-
-                        val foldersState: MutableList<Boolean> = MutableList(documentData.size){false}
-
-                        documentData.forEach {
-                            val index = dataState.value.indexOf(it.key)
-                            foldersState[index] = it.value as Boolean //TO REFLECT THE ORDER FROM DATABASE
+                        foldersFromStorage.forEach {
+                            foldersFromStorage[it.key] = if (documentData[it.key] != null) documentData[it.key] as Boolean else false  //TO REFLECT THE ORDER FROM DATABASE
                         }
-                        _checkboxStates.value = foldersState
 
+                        _dataState.value = foldersFromStorage.keys.toList()
+                        _checkboxStates.value = foldersFromStorage.values.toList()
 
-                        for (folder in newFoundedFolders) {
-                            docRef.update(FieldPath.of(folder), false)
+                        if (documentData.size != foldersFromStorage.size) {
+                            docRef.set(foldersFromStorage)
                                 .addOnSuccessListener {
-                                    println("Document successfully updated with new folders!")
+                                    println("Document successfully override with all folders!")
                                 }
                                 .addOnFailureListener { e ->
-                                    println("Error updating document: $e")
+                                    println("Error creating document: $e")
                                 }
                         }
 
                     } else {
-                        docRef.set(foldersToUpdate)
+                        docRef.set(foldersFromStorage)
                             .addOnSuccessListener {
                                 println("Document successfully created with all folders!")
                             }

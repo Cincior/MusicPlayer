@@ -27,7 +27,7 @@ class SongsFinder(private val context: Context) {
         )
         //val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("%ZEAMSONEPLYTA%") //DIRECTORY
+        val selectionArgs = arrayOf("%ZEAMSONEPLYTA%", "%xd%") //DIRECTORY
 
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
@@ -71,9 +71,12 @@ class SongsFinder(private val context: Context) {
         return songs
     }
 
-    fun getSongsFromGivenDirectories(directories: List<String>): ArrayList<Song> {
+    fun getSongsFromGivenDirectories(directories: Array<String>): ArrayList<Song> {
 
         val songs = ArrayList<Song>()
+        if (directories.isEmpty()) {
+            return songs
+        }
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -82,14 +85,14 @@ class SongsFinder(private val context: Context) {
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM_ID
         )
-        //val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
-        val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArray: MutableList<String> = mutableListOf()
-        directories.forEach {
-            selectionArray.add(it)
+        val selection = directories.joinToString(separator = " OR ") {
+            "${MediaStore.Audio.Media.DATA} LIKE ?"
         }
-        val selectionArgs = selectionArray.toTypedArray() //DIRECTORY
+        println("selection: " + selection)
 
+        // Prepare the selection arguments for the LIKE conditions
+        val selectionArgs = directories
+        println("selectionARGS: " + selectionArgs[0])
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         context.contentResolver.query(
@@ -129,6 +132,7 @@ class SongsFinder(private val context: Context) {
 
             }
         }
+        println("s: " + songs)
         return songs
     }
 

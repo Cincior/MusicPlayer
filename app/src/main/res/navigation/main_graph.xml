@@ -40,5 +40,9 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.koszyk.musicplayer.view.fragment.SettingsFragment"
-        android:label="SettingsFragment" />
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_settingsFragment_to_playerFragment"
+            app:destination="@id/playerFragment" />
+    </fragment>
 </navigation>
