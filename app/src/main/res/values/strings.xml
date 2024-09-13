@@ -11,5 +11,6 @@
     <string name="music_icon">Music icon</string>
     <string name="play_pause_button">Play/Pause button</string>
     <string name="chose_your_song">CHOSE YOUR SONG</string>
+    <string name="No_audio_has_been_found_Try_changing_directories_in_settings">No audio has been found! Try changing directories in settings.</string>
 
 </resources>

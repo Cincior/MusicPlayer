@@ -23,6 +23,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.koszyk.musicplayer.R
 import com.koszyk.musicplayer.adapters.SongAdapter
 import com.koszyk.musicplayer.adapters.SongAdapter.ItemViewHolder
@@ -84,6 +85,12 @@ class HomeFragment : Fragment() {
         songViewModel.isSongsLoaded.observe(viewLifecycleOwner) { isLoaded ->
             if (isLoaded) {
                 binding.homeProgressIndicator.visibility = View.GONE
+                if (songViewModel.items.value.isNullOrEmpty()) {
+                    binding.homeNoSongWarning.visibility = View.VISIBLE
+                }
+                else {
+                    binding.homeNoSongWarning.visibility = View.GONE
+                }
                 songAdapter = SongAdapter(songViewModel.items.value!!)
                 initializeAdapterOnClickFunctions(songAdapter)
 
@@ -95,6 +102,13 @@ class HomeFragment : Fragment() {
                 initializeSearchViewOnActionListener(binding.searchSong)
                 songViewModel.currentSong.observe(viewLifecycleOwner) {
                     manageSong(songAdapter)
+                }
+
+                songViewModel.isCheckedStateChanged.observe(viewLifecycleOwner) { state ->
+                    if (state == true) {
+                        refreshSongs(binding.swipeRecyclerViewLayout)
+                        songViewModel.changeIsCheckedState(false)
+                    }
                 }
             }
         }
@@ -188,27 +202,32 @@ class HomeFragment : Fragment() {
     private fun initializeSwipeRefreshLayout() {
         val swipeRefreshLayout = binding.swipeRecyclerViewLayout
         swipeRefreshLayout.setOnRefreshListener {
+            refreshSongs(swipeRefreshLayout)
+        }
+    }
 
+    private fun refreshSongs(swipeRefreshLayout: SwipeRefreshLayout) {
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                val existingQuery = binding.searchSong.query.toString()
-                songViewModel.getSongsFromChosenFoldersSuspend(requireContext())
+        lifecycleScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                swipeRefreshLayout.isRefreshing = true;
+            }
+            val existingQuery = binding.searchSong.query.toString()
+            songViewModel.getSongsFromChosenFoldersSuspend(requireContext())
 
-
-                withContext(Dispatchers.Main) {
-                    if (songViewModel.currentSong.value == null) {
-                        musicService?.audioPlayer?.destroyPlayer()
-                    }
-                    songAdapter.insertNewItems(songViewModel.items.value!!)
-                    if (existingQuery.isNotEmpty()) {
-                        songAdapter.filterSongs(existingQuery)
-                    }
-                    songAdapter.notifyItemRangeChanged(0, songViewModel.getSongsCount() - 1)
-                    swipeRefreshLayout.isRefreshing = false;
-                    val activity = requireActivity() as MainActivity
-                    val snackbar = activity.createSnackBar("Refresh completed!", Gravity.TOP)
-                    snackbar.show()
+            withContext(Dispatchers.Main) {
+                if (songViewModel.currentSong.value == null) {
+                    musicService?.audioPlayer?.destroyPlayer()
                 }
+                songAdapter.insertNewItems(songViewModel.items.value!!)
+                if (existingQuery.isNotEmpty()) {
+                    songAdapter.filterSongs(existingQuery)
+                }
+                songAdapter.notifyItemRangeChanged(0, songViewModel.getSongsCount() - 1)
+                swipeRefreshLayout.isRefreshing = false;
+                val activity = requireActivity() as MainActivity
+                val snackbar = activity.createSnackBar("Refresh completed!", Gravity.TOP)
+                snackbar.show()
             }
         }
     }

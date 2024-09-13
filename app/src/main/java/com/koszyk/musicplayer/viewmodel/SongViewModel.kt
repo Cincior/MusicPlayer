@@ -33,6 +33,9 @@ class SongViewModel() : ViewModel() {
     private val _isSongsLoaded = MutableLiveData<Boolean>()
     val isSongsLoaded: LiveData<Boolean> get() = _isSongsLoaded
 
+    val _isCheckedStateChanged = MutableLiveData<Boolean>()
+    val isCheckedStateChanged: LiveData<Boolean> get() = _isCheckedStateChanged
+
     lateinit var favouritesRepository: FavouritesRepository
 
     init {
@@ -271,6 +274,10 @@ class SongViewModel() : ViewModel() {
                 }
             }
         }
+    }
+
+    fun changeIsCheckedState(state: Boolean) {
+        _isCheckedStateChanged.value = state
     }
 
 }

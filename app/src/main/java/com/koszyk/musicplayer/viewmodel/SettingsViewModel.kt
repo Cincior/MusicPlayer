@@ -19,6 +19,9 @@ class SettingsViewModel: ViewModel() {
     private val _checkboxStates = MutableStateFlow<List<Boolean>>(emptyList())
     val checkboxStates: StateFlow<List<Boolean>> get() = _checkboxStates
 
+    private val _onStartCheckboxStates = MutableStateFlow<List<Boolean>>(emptyList())
+    val onStartCheckboxStates: StateFlow<List<Boolean>> get() = _onStartCheckboxStates
+
     private val db = Firebase.firestore
 
     fun fetchDataFromFirebase(context: Context) {
@@ -41,6 +44,7 @@ class SettingsViewModel: ViewModel() {
 
                         _dataState.value = foldersFromStorage.keys.toList()
                         _checkboxStates.value = foldersFromStorage.values.toList()
+                        _onStartCheckboxStates.value = foldersFromStorage.values.toList()
 
                         if (documentData.size != foldersFromStorage.size) {
                             docRef.set(foldersFromStorage)
