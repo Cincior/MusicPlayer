@@ -22,9 +22,13 @@ class SettingsViewModel: ViewModel() {
     private val _onStartCheckboxStates = MutableStateFlow<List<Boolean>>(emptyList())
     val onStartCheckboxStates: StateFlow<List<Boolean>> get() = _onStartCheckboxStates
 
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
+
     private val db = Firebase.firestore
 
     fun fetchDataFromFirebase(context: Context) {
+        _isLoading.value = true
         viewModelScope.launch {
             val docRef = db.collection("folders").document(DEVICE_ID)
             val folderFinder = FoldersWithSongsFinder()
@@ -45,6 +49,7 @@ class SettingsViewModel: ViewModel() {
                         _dataState.value = foldersFromStorage.keys.toList()
                         _checkboxStates.value = foldersFromStorage.values.toList()
                         _onStartCheckboxStates.value = foldersFromStorage.values.toList()
+                        _isLoading.value = false
 
                         if (documentData.size != foldersFromStorage.size) {
                             docRef.set(foldersFromStorage)

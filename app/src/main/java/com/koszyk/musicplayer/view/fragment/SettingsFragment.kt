@@ -77,8 +77,9 @@ class SettingsFragment : Fragment() {
 
         val data = viewModel.dataState.collectAsState().value
         val checkboxStates = viewModel.checkboxStates.collectAsState().value.toMutableList()
+        val isLoading = viewModel.isLoading.collectAsState().value
 
-        if (data.isEmpty() || checkboxStates.isEmpty()) {
+        if (isLoading) {
             Showloading()
         } else {
             Column(
@@ -144,7 +145,7 @@ class SettingsFragment : Fragment() {
                         .padding(6.dp)
                 ) {
                     Text(
-                        text = "Choose directories with audio that you want to see on the list",
+                        text = if (data.isEmpty()) "We couldn't find any folders. Download some audio on your device" else "Choose directories with audio that you want to see on the list",
                         fontSize = 16.sp,
                         fontStyle = FontStyle.Italic,
                         color = Color.White,

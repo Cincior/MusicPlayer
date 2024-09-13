@@ -94,6 +94,10 @@ class HomeFragment : Fragment() {
                 songAdapter = SongAdapter(songViewModel.items.value!!)
                 initializeAdapterOnClickFunctions(songAdapter)
 
+                if (binding.searchSong.query.isNotEmpty()) {
+                    songAdapter.filterSongs(binding.searchSong.query.toString())
+                }
+
                 (binding.songList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
                 binding.songList.adapter = songAdapter
 
