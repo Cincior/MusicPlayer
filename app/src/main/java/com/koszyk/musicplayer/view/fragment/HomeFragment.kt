@@ -119,8 +119,8 @@ class HomeFragment : Fragment() {
 
 
 
-        binding.btnPlaylists.setOnClickListener {
-            //findNavController().navigate(R.id.action_homeFragment_to_playerFragment)
+        binding.btnTopLists.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_topListFragment)
         }
 
         binding.btnFavourites.setOnClickListener {
