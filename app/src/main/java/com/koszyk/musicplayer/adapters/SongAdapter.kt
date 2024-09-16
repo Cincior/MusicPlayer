@@ -115,12 +115,13 @@ class SongAdapter(private var items: ArrayList<Song>) :
     }
 
     fun updateAfterDeletion(id: Int, count: Int) {
-        notifyItemRangeChanged(id, count)
+        //notifyItemRangeChanged(id, count)
         notifyItemRemoved(id)
 
-        items.removeAt(id)
+        //items.removeAt(id)
         //update copy of items as well
         defaultItems.removeAt(id)
+
     }
 
     fun insertNewItems(newSongs: ArrayList<Song>) {

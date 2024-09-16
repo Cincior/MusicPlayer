@@ -27,7 +27,7 @@ class SongsFinder(private val context: Context) {
         )
         //val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val selection = "${MediaStore.Audio.Media.DATA} LIKE ?"
-        val selectionArgs = arrayOf("%Download%") //DIRECTORY
+        val selectionArgs = arrayOf("%ZEAMSONEPLYTA%", "%xd%") //DIRECTORY
 
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
@@ -68,6 +68,71 @@ class SongsFinder(private val context: Context) {
 
             }
         }
+        return songs
+    }
+
+    fun getSongsFromGivenDirectories(directories: Array<String>): ArrayList<Song> {
+
+        val songs = ArrayList<Song>()
+        if (directories.isEmpty()) {
+            return songs
+        }
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.TITLE,
+            MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.ARTIST,
+            MediaStore.Audio.Media.ALBUM_ID
+        )
+        val selection = directories.joinToString(separator = " OR ") {
+            "${MediaStore.Audio.Media.DATA} LIKE ?"
+        }
+        println("selection: " + selection)
+
+        // Prepare the selection arguments for the LIKE conditions
+        val selectionArgs = directories
+        println("selectionARGS: " + selectionArgs[0])
+        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
+
+        context.contentResolver.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            sortOrder
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
+            val titleCol = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
+            val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
+            val artistCol = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
+            val albumIdCol = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idCol)
+                val title = cursor.getString(titleCol)
+                val duration = cursor.getLong(durationCol)
+                val artist = cursor.getString(artistCol)
+                val uri = ContentUris.withAppendedId(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+                val albumId = cursor.getString(albumIdCol)
+                songs.add(
+                    Song(
+                        id,
+                        title,
+                        formatArtistName(artist),
+                        duration,
+                        uri,
+                        albumId,
+                        AudioState.NONE
+                    )
+                )
+
+            }
+        }
+        println("s: " + songs)
         return songs
     }
 

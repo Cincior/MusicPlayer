@@ -23,15 +23,20 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.koszyk.musicplayer.R
 import com.koszyk.musicplayer.adapters.SongAdapter
 import com.koszyk.musicplayer.adapters.SongAdapter.ItemViewHolder
 import com.koszyk.musicplayer.databinding.FragmentHomeBinding
 import com.koszyk.musicplayer.media.MusicPlayerService
+import com.koszyk.musicplayer.model.AudioState
 import com.koszyk.musicplayer.model.Song
 import com.koszyk.musicplayer.view.MainActivity
 import com.koszyk.musicplayer.viewmodel.SongViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeFragment : Fragment() {
     companion object {
@@ -42,6 +47,8 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    var deletionId = -1 // Id of particular Song that can be deleted
+    var listId = -1 // Id of item in recyclerView that can be deleted
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     private val songViewModel: SongViewModel by activityViewModels()
@@ -75,23 +82,42 @@ class HomeFragment : Fragment() {
 
         registerIntentSender()
 
-        songAdapter = SongAdapter(songViewModel.items.value!!)
-        initializeAdapterOnClickFunctions(songAdapter)
+        songViewModel.isSongsLoaded.observe(viewLifecycleOwner) { isLoaded ->
+            if (isLoaded) {
+                binding.homeProgressIndicator.visibility = View.GONE
+                if (songViewModel.items.value.isNullOrEmpty()) {
+                    binding.homeNoSongWarning.visibility = View.VISIBLE
+                }
+                else {
+                    binding.homeNoSongWarning.visibility = View.GONE
+                }
+                songAdapter = SongAdapter(songViewModel.items.value!!)
+                initializeAdapterOnClickFunctions(songAdapter)
 
-        (binding.songList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
-        binding.songList.adapter = songAdapter
+                if (binding.searchSong.query.isNotEmpty()) {
+                    songAdapter.filterSongs(binding.searchSong.query.toString())
+                }
 
-        initializeSwipeRefreshLayout()
+                (binding.songList.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+                binding.songList.adapter = songAdapter
 
-        initializeSearchViewOnActionListener(binding.searchSong)
+                initializeSwipeRefreshLayout()
 
-        songViewModel.currentSong.observe(viewLifecycleOwner) {
-            manageSong(songAdapter)
+                initializeSearchViewOnActionListener(binding.searchSong)
+                songViewModel.currentSong.observe(viewLifecycleOwner) {
+                    manageSong(songAdapter)
+                }
+
+                songViewModel.isCheckedStateChanged.observe(viewLifecycleOwner) { state ->
+                    if (state == true) {
+                        refreshSongs(binding.swipeRecyclerViewLayout)
+                        songViewModel.changeIsCheckedState(false)
+                    }
+                }
+            }
         }
 
-//        songViewModel.items.observe(viewLifecycleOwner) { items ->
-//
-//        }
+
 
         binding.btnPlaylists.setOnClickListener {
             //findNavController().navigate(R.id.action_homeFragment_to_playerFragment)
@@ -102,7 +128,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.settingBtn.setOnClickListener {
-            Toast.makeText(requireContext(), "There will be settings (choosing folder with song)", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_homeFragment_to_settingsFragment)
         }
 
     }
@@ -131,19 +157,11 @@ class HomeFragment : Fragment() {
                                     requireContext().contentResolver,
                                     listOf(song.uri)
                                 )
-                                val intentExtraId = Intent().apply {
-                                    println(position.toString() + "pozycja przed wysalniem")
-                                    putExtra(EXTRA_ITEM_INDEX, position)
-                                }
-
                                 intentSenderLauncher.launch(
-                                    IntentSenderRequest.Builder(deleteRequest)
-                                        .setFillInIntent(intentExtraId)
-                                        .build()
+                                    IntentSenderRequest.Builder(deleteRequest).build()
                                 )
-//                                deletionId = song.id.toInt()
-//                                println(position.toString() + "???" + deletionId)
-//                                listId = position
+                                deletionId = song.id.toInt()
+                                listId = position
                             }
 
                             1 -> {
@@ -188,20 +206,33 @@ class HomeFragment : Fragment() {
     private fun initializeSwipeRefreshLayout() {
         val swipeRefreshLayout = binding.swipeRecyclerViewLayout
         swipeRefreshLayout.setOnRefreshListener {
-            val existingQuery = binding.searchSong.query.toString()
+            refreshSongs(swipeRefreshLayout)
+        }
+    }
 
-            songViewModel.getSongsUpdate(requireContext())
-            songAdapter.insertNewItems(songViewModel.items.value!!)
-            if (existingQuery.isNotEmpty()) {
-                songAdapter.filterSongs(existingQuery)
+    private fun refreshSongs(swipeRefreshLayout: SwipeRefreshLayout) {
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) {
+                swipeRefreshLayout.isRefreshing = true;
             }
+            val existingQuery = binding.searchSong.query.toString()
+            songViewModel.getSongsFromChosenFoldersSuspend(requireContext())
 
-            songAdapter.notifyDataSetChanged()
-            swipeRefreshLayout.isRefreshing = false;
-            val activity = requireActivity() as MainActivity
-            val snackbar = activity.createSnackBar("Refresh completed!", Gravity.TOP)
-            snackbar.show()
-
+            withContext(Dispatchers.Main) {
+                if (songViewModel.currentSong.value == null) {
+                    musicService?.audioPlayer?.destroyPlayer()
+                }
+                songAdapter.insertNewItems(songViewModel.items.value!!)
+                if (existingQuery.isNotEmpty()) {
+                    songAdapter.filterSongs(existingQuery)
+                }
+                songAdapter.notifyItemRangeChanged(0, songViewModel.getSongsCount() - 1)
+                swipeRefreshLayout.isRefreshing = false;
+                val activity = requireActivity() as MainActivity
+                val snackbar = activity.createSnackBar("Refresh completed!", Gravity.TOP)
+                snackbar.show()
+            }
         }
     }
 
@@ -225,24 +256,18 @@ class HomeFragment : Fragment() {
     private fun registerIntentSender() {
         // Registering deletion
         intentSenderLauncher =
-            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    val deletionData = result.data
-                    if (deletionData != null) {
-                        val deletionIndex = deletionData.getIntExtra(EXTRA_ITEM_INDEX, -1)
-                        println(deletionIndex.toString() + "tutaj")
-                        if (deletionIndex != -1) {
-                            if (songViewModel.currentSong.value?.id?.toInt() == deletionIndex) {
-                                musicService?.audioPlayer?.destroyPlayer()
-                            }
-                            songViewModel.deleteSong(deletionIndex)
-                            songAdapter.updateAfterDeletion(
-                                deletionIndex,
-                                songViewModel.getSongsCount(),
-                            )
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                if (it.resultCode == RESULT_OK) {
+                    if (listId != -1) {
+                        if (songViewModel.currentSong.value?.id == deletionId.toLong()) {
+                            musicService?.audioPlayer?.destroyPlayer()
                         }
-                    } else {
-                        println(deletionData)
+                        songViewModel.deleteSong(listId)
+                        songAdapter.updateAfterDeletion(
+                            listId,
+                            songViewModel.items.value!!.size,
+                        )
+                        listId = -1
                     }
                 } else {
                     Toast.makeText(

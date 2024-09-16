@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "242388976951",
+    "project_id": "music-player-d0ff5",
+    "storage_bucket": "music-player-d0ff5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:242388976951:android:1321c330532cb203cb86b2",
+        "android_client_info": {
+          "package_name": "com.koszyk.musicplayer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD38D7CjJc0wPCBcshzMo1Z9za_ODt7llQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

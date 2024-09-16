@@ -113,8 +113,7 @@ class PlayerFragment : Fragment() {
         songViewModel.currentSong.observe(viewLifecycleOwner) { cSong ->
             if (cSong.isPlaying in listOf(
                     AudioState.PLAY,
-                    AudioState.RESUME
-                )
+                    AudioState.RESUME)
             ) {
                 buttonPlayPause.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause_circle))
             } else {

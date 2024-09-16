@@ -20,6 +20,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.koszyk.musicplayer.R
@@ -30,8 +31,10 @@ import com.koszyk.musicplayer.model.Song
 import com.koszyk.musicplayer.view.mainActivityHelpers.*
 import com.koszyk.musicplayer.viewmodel.SongViewModel
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
-
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_TITLE = "title"
@@ -120,15 +123,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Get songs once the app is being created
-        songViewModel.getSongs(this)
+        lifecycleScope.launch {
+            songViewModel.getSongsFromChosenFoldersSuspend(this@MainActivity)
+        }
         songViewModel.initializeRepo(this)
 
         songViewModel.currentSong.observe(this) { s ->
-            if (s.isPlaying != AudioState.PAUSE) {
-                audioManager.requestAudioFocus(focusRequest)
+            if (s != null) {
+                if (s.isPlaying != AudioState.PAUSE) {
+                    audioManager.requestAudioFocus(focusRequest)
+                }
+                changeBottomPlayer(s)
+                manageSong(s)
+            } else {
+                binding.songTitleBottom.text = getString(R.string.chose_your_song)
             }
-            changeBottomPlayer(s)
-            manageSong(s)
         }
 
         binding.btnPlayPauseBottom.setOnClickListener {
@@ -139,7 +148,7 @@ class MainActivity : AppCompatActivity() {
             if (songViewModel.currentSong.value != null) {
                 navController.navigate(actionToPlayer)
             } else {
-                val sB = createSnackBar("Choose your song first!", Gravity.END)
+                val sB = createSnackBar("Choose your song first!", null)
                 sB.show()
             }
 
@@ -156,6 +165,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.homeFragment -> {
                     actionToPlayer = R.id.action_homeFragment_to_playerFragment
+                    binding.bottomPlayerManager.visibility = View.VISIBLE
+                }
+                R.id.settingsFragment -> {
+                    actionToPlayer = R.id.action_settingsFragment_to_playerFragment
                     binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
             }
@@ -211,8 +224,13 @@ class MainActivity : AppCompatActivity() {
                     startService(it)
                 }
                 musicService?.audioPlayer?.playSong(song.uri, songViewModel.repeat.value ?: false) {
-                    songViewModel.currentSong.value?.isPlaying = AudioState.END
-                    songViewModel.updateCurrentSong(songViewModel.currentSong.value!!)
+                    if (songViewModel.currentSong.value != null) {
+                        songViewModel.currentSong.value?.isPlaying = AudioState.END
+                        songViewModel.currentSong.value?.let { songViewModel.updateCurrentSong(it) }
+                    } else {
+                        binding.songTitleBottom.text = "CHOOSE YOUR SONG"
+                    }
+
                 }
             }
             AudioState.RESUME -> {
@@ -225,7 +243,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun createSnackBar(message: String, gravity: Int): Snackbar {
+    fun createSnackBar(message: String, gravity: Int?): Snackbar {
         val snackbar = Snackbar.make(
             this,
             binding.main,
@@ -235,9 +253,12 @@ class MainActivity : AppCompatActivity() {
         snackbar.setAction("OK") {
             snackbar.dismiss()
         }
-        val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
-        snackbarParams.gravity = gravity
-        snackbar.view.layoutParams = snackbarParams
+        if (gravity != null) {
+            val snackbarParams = snackbar.view.layoutParams as CoordinatorLayout.LayoutParams
+            snackbarParams.gravity = gravity
+            snackbar.view.layoutParams = snackbarParams
+        }
+
         return snackbar
     }
 }

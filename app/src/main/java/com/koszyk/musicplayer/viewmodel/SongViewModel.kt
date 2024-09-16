@@ -4,10 +4,19 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import com.koszyk.musicplayer.media.MusicPlayerService
 import com.koszyk.musicplayer.model.AudioState
 import com.koszyk.musicplayer.model.Song
 import com.koszyk.musicplayer.model.SongsFinder
 import com.koszyk.musicplayer.repository.FavouritesRepository
+import com.koszyk.musicplayer.view.fragment.SettingsFragment.Companion.DEVICE_ID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 
 class SongViewModel() : ViewModel() {
@@ -21,11 +30,17 @@ class SongViewModel() : ViewModel() {
     private val _repeat = MutableLiveData<Boolean>()
     val repeat: LiveData<Boolean> get() = _repeat
 
+    private val _isSongsLoaded = MutableLiveData<Boolean>()
+    val isSongsLoaded: LiveData<Boolean> get() = _isSongsLoaded
+
+    val _isCheckedStateChanged = MutableLiveData<Boolean>()
+    val isCheckedStateChanged: LiveData<Boolean> get() = _isCheckedStateChanged
+
     lateinit var favouritesRepository: FavouritesRepository
 
     init {
         _repeat.value = false
-
+        _isSongsLoaded.value = false
     }
 
 
@@ -46,6 +61,76 @@ class SongViewModel() : ViewModel() {
         val songList = sf.getSongsFromDownload()
         _items.value = songList
     }
+
+    fun getSongsFromChosenFolders(context: Context) {
+        _isSongsLoaded.value = false
+        val db = Firebase.firestore
+        val docRef = db.collection("folders").document(DEVICE_ID)
+        var folderMap: Map<String, Any>
+        val folderList: MutableList<String> = mutableListOf()
+        docRef
+            .get()
+            .addOnSuccessListener { document ->
+                folderMap = document.data ?: emptyMap()
+                folderMap.forEach {
+                    if (it.value == true) {
+                        folderList.add("%" + it.key.substringAfterLast("/") + "%")
+                    }
+                }
+
+                val sf = SongsFinder(context)
+                val songList = sf.getSongsFromGivenDirectories(folderList.toTypedArray())
+                _items.value = songList
+                _isSongsLoaded.value = true
+            }
+
+    }
+
+    suspend fun getSongsFromChosenFoldersSuspend(context: Context) {
+        withContext(Dispatchers.Main) {
+            _isSongsLoaded.value = false
+        }
+
+        withContext(Dispatchers.IO) {
+            val db = Firebase.firestore
+            val docRef = db.collection("folders").document(DEVICE_ID)
+
+            val documentSnapshot = docRef.get().await()
+
+            val folderMap = documentSnapshot.data ?: emptyMap()
+            val folderList: MutableList<String> = mutableListOf()
+
+            folderMap.forEach {
+                if (it.value == true) {
+                    println("tutaj dodaje %: " + it.key)
+                    folderList.add(it.key + "/%")
+                }
+            }
+
+            val sf = SongsFinder(context)
+            val songList = sf.getSongsFromGivenDirectories(folderList.toTypedArray())
+
+            // Save previous song state
+            var stateBeforeUpdate = currentSong.value?.isPlaying
+            if (stateBeforeUpdate == AudioState.PLAY) {
+                stateBeforeUpdate = AudioState.RESUME
+            }
+
+            withContext(Dispatchers.Main) {
+                _items.value = songList
+                _currentSong.value = _items.value?.find {
+                    it.id == currentSong.value?.id
+                }.also {
+                    it?.isPlaying = stateBeforeUpdate ?: AudioState.NONE
+                }
+
+                _isSongsLoaded.value = true
+            }
+
+        }
+    }
+
+
     fun getSongsUpdate(context: Context) {
         val sf = SongsFinder(context)
         val songList = sf.getSongsFromDownload()
@@ -57,8 +142,22 @@ class SongViewModel() : ViewModel() {
         newSongs.forEach {
             items.value?.add(0, it)
         }
-
     }
+//      BUGGED
+//    fun getSongsUpdateFromChosenFolders(context: Context) {
+//        val sf = SongsFinder(context)
+//        val songList = sf.getSongsFromGivenDirectories(chosenFolders)
+//
+//        val newSongs = songList.filter { song ->
+//            song.id !in items.value!!.map { it.id }
+//        }
+//
+//        newSongs.forEach {
+//            items.value?.add(0, it)
+//        }
+//        println("po update: " + songList)
+//
+//    }
 
     fun initializeRepo(context: Context) {
         favouritesRepository = FavouritesRepository(context)
@@ -173,6 +272,10 @@ class SongViewModel() : ViewModel() {
                 }
             }
         }
+    }
+
+    fun changeIsCheckedState(state: Boolean) {
+        _isCheckedStateChanged.value = state
     }
 
 }
