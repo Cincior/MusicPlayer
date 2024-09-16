@@ -91,12 +91,10 @@ class SongViewModel() : ViewModel() {
             _isSongsLoaded.value = false
         }
 
-        // Move the Firebase querying logic into an await() call
         withContext(Dispatchers.IO) {
             val db = Firebase.firestore
             val docRef = db.collection("folders").document(DEVICE_ID)
 
-            // Await Firebase call completion
             val documentSnapshot = docRef.get().await()
 
             val folderMap = documentSnapshot.data ?: emptyMap()

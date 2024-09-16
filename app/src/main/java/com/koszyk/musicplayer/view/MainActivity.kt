@@ -31,9 +31,10 @@ import com.koszyk.musicplayer.model.Song
 import com.koszyk.musicplayer.view.mainActivityHelpers.*
 import com.koszyk.musicplayer.viewmodel.SongViewModel
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_TITLE = "title"

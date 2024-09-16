@@ -36,30 +36,31 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.koszyk.musicplayer.R
 import com.koszyk.musicplayer.model.Song
 import com.koszyk.musicplayer.viewmodel.SettingsViewModel
 import com.koszyk.musicplayer.viewmodel.SongViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class SettingsFragment : Fragment() {
     companion object {
         val DEVICE_ID: String =
             android.os.Build.MODEL; // MODEL NAME JUST FOR DATABASE PRESENTATION PURPOSES
     }
     private val songViewModel: SongViewModel by activityViewModels()
-    private val viewModel: SettingsViewModel by viewModels()
+    private lateinit var viewModel: SettingsViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
 
-        viewModel.fetchDataFromFirebase(requireContext())
-
-
         return ComposeView(requireContext()).apply {
             setContent {
+                viewModel = hiltViewModel()
+                viewModel.fetchDataFromFirebase(requireContext())
                 ShowFolders(viewModel)
             }
         }

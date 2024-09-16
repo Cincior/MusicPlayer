@@ -19,9 +19,14 @@ import com.koszyk.musicplayer.view.MainActivity
 import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_ARTIST
 import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_NOTIFICATION_SERVICE
 import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_TITLE
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MusicPlayerService : Service() {
-    var audioPlayer: AudioPlayer? = null
+    @Inject
+    lateinit var audioPlayer: AudioPlayer
+
     private val binder = MusicServiceBinder()
 
     inner class MusicServiceBinder : Binder() {
@@ -30,7 +35,6 @@ class MusicPlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        audioPlayer = AudioPlayer(applicationContext)
 
     }
 
@@ -78,12 +82,12 @@ class MusicPlayerService : Service() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         stopSelf()
-        audioPlayer?.destroyPlayer()
+        audioPlayer.destroyPlayer()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        audioPlayer?.destroyPlayer()
+        audioPlayer.destroyPlayer()
 
     }
 
@@ -91,15 +95,6 @@ class MusicPlayerService : Service() {
     enum class Actions {
         Start,
         Stop
-    }
-
-    private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
-            if (state.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
-                println("cringe call")
-            }
-        }
     }
 
 }

@@ -5,9 +5,9 @@ import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import javax.inject.Inject
 
-class AudioPlayer(private val context: Context) {
-    private var mediaExoPlayer = ExoPlayer.Builder(context).build()
+class AudioPlayer @Inject constructor(private val mediaExoPlayer: ExoPlayer) {
 
     fun playSong(uri: Uri, isLoopEnabled: Boolean, onCompletionListener: (() -> Unit)? = null) {
         if (mediaExoPlayer.isPlaying) {
