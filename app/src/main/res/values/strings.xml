@@ -3,10 +3,8 @@
     <string name="headerTitle">K7 Music Player</string>
     <string name="currently_playing">Your song:</string>
     <string name="favourites">Favourites</string>
-    <string name="your_playlists">Playlists</string>
+    <string name="list_top">Top world</string>
     <string name="startSongTime">0:00</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="settings">Settings</string>
     <string name="music_icon">Music icon</string>
     <string name="play_pause_button">Play/Pause button</string>

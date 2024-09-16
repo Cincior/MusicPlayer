@@ -171,6 +171,10 @@ class MainActivity : AppCompatActivity() {
                     actionToPlayer = R.id.action_settingsFragment_to_playerFragment
                     binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
+                R.id.action_homeFragment_to_topListFragment -> {
+                    actionToPlayer = R.id.action_topListFragment_to_playerFragment
+                    binding.bottomPlayerManager.visibility = View.VISIBLE
+                }
             }
         }
 
