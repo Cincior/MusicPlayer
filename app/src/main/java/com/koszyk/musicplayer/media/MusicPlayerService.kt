@@ -13,8 +13,8 @@ import android.os.IBinder
 import android.telephony.TelephonyManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.koszyk.MyApp.Companion.NOTIFICATION_CHANNEL
 import com.koszyk.musicplayer.R
-import com.koszyk.musicplayer.media.NotificationChannel.Companion.NOTIFICATION_CHANNEL
 import com.koszyk.musicplayer.view.MainActivity
 import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_ARTIST
 import com.koszyk.musicplayer.view.MainActivity.Companion.EXTRA_NOTIFICATION_SERVICE

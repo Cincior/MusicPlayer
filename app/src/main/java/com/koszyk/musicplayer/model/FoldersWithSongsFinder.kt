@@ -32,13 +32,10 @@ class FoldersWithSongsFinder() {
                 val filePath = cursor.getString(dataIndex)
 
                 val folderPath = filePath.substring(0, filePath.lastIndexOf('/'))
-                println("folderpath: " + folderPath)
                 audioFolders.add(folderPath)
             }
         }
 
-
-       println("aktualne foldery: " + audioFolders)
         return audioFolders.toList()
     }
 }

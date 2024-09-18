@@ -102,7 +102,6 @@ class SongViewModel() : ViewModel() {
 
             folderMap.forEach {
                 if (it.value == true) {
-                    println("tutaj dodaje %: " + it.key)
                     folderList.add(it.key + "/%")
                 }
             }

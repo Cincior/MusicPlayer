@@ -50,7 +50,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var audioManager: AudioManager
     private lateinit var focusRequest: AudioFocusRequest
     private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
-        println(focusChange)
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS -> {
                 // Permanent loss of audio focus
@@ -171,7 +170,7 @@ class MainActivity : AppCompatActivity() {
                     actionToPlayer = R.id.action_settingsFragment_to_playerFragment
                     binding.bottomPlayerManager.visibility = View.VISIBLE
                 }
-                R.id.action_homeFragment_to_topListFragment -> {
+                R.id.topListFragment -> {
                     actionToPlayer = R.id.action_topListFragment_to_playerFragment
                     binding.bottomPlayerManager.visibility = View.VISIBLE
                 }

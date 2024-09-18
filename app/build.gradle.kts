@@ -90,4 +90,10 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+    //okhttp
+    implementation(libs.okhttp)
+
+    // Gson for parsing JSON
+    implementation(libs.gson)
+
 }
