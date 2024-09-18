@@ -88,11 +88,9 @@ class SongsFinder(private val context: Context) {
         val selection = directories.joinToString(separator = " OR ") {
             "${MediaStore.Audio.Media.DATA} LIKE ?"
         }
-        println("selection: " + selection)
 
         // Prepare the selection arguments for the LIKE conditions
         val selectionArgs = directories
-        println("selectionARGS: " + selectionArgs[0])
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
 
         context.contentResolver.query(

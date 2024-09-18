@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.koszyk.musicplayer" />
+                  <option name="mobileSdkAppId" value="1:242388976951:android:1321c330532cb203cb86b2" />
+                  <option name="projectId" value="music-player-d0ff5" />
+                  <option name="projectNumber" value="242388976951" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

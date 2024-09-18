@@ -26,7 +26,6 @@ class GetFoldersUseCase(
         } else {
             directoriesRepository.setFoldersInDatabase(deviceId, foldersFromStorage)
         }
-        println("getFoldersUseCase Works!")
 
         return foldersFromStorage
     }
